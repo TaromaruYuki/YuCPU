@@ -288,10 +288,8 @@ impl Assembler {
 
         let buffer = std::io::BufReader::new(file);
 
-        for line in buffer.lines() {
-            if let Ok(line_val) = line {
-                result.push(line_val);
-            }
+        for line in buffer.lines().flatten() {
+            result.push(line);
         }
 
         result
