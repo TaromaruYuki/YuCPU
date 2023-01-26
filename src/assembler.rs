@@ -7,6 +7,7 @@ mod token;
 use label::Label;
 use label::LabelType;
 use regex::Regex;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
@@ -14,11 +15,16 @@ use std::path::Path;
 use std::process::exit;
 use token::Token;
 
+type Instruction = (u8, u8, u8, u8);
+type AssemblerTokens = (Vec<Token>, Vec<Token>);
+type InstructionFunction = fn(AssemblerLabels, AssemblerTokens) -> Instruction;
+
 pub struct Assembler {
     pub file_in: Box<Path>,
     pub file_out: Box<Path>,
 
     start_label: String,
+    inst_map: HashMap<String, InstructionFunction>,
 }
 
 impl Assembler {
@@ -30,6 +36,7 @@ impl Assembler {
             file_in: Into::into(file_in_path),
             file_out: Into::into(file_out_path),
             start_label: String::from(""),
+            inst_map: HashMap::new(),
         }
     }
 }
@@ -40,23 +47,40 @@ pub struct AssemblerLabels {
 }
 
 impl Assembler {
+    fn fill_hashmap(mut self) -> Self {
+        // FIXME: There HAS to be a better way to do ALL of this
+
+        self.inst_map.insert(String::from("LD"), Assembler::inst_ld);
+
+        self
+    }
+
     pub fn assemble(mut self) {
+        self = self.fill_hashmap();
+
         let tokens: (String, Vec<Token>, Vec<Token>) = self.tokenize();
 
         if !tokens.0.is_empty() {
             self.start_label = tokens.0.clone();
         }
 
-        let _labels: AssemblerLabels = self.parse_labels(tokens.1, tokens.2);
+        let labels: AssemblerLabels = self.parse_labels(tokens.1, tokens.2);
+
+        println!("Data Labels:\n{:#?}\n\n", labels.data_labels);
+        println!("Text Labels:\n{:#?}\n\n", labels.text_labels);
     }
 
-    // fn labels_to_bytes(labels: AssemblerLabels) -> Vec<u8> {
-    //     let mut bytes: Vec<u8> = Vec::new();
+    fn labels_to_bytes(labels: AssemblerLabels, _tokens: (Vec<Token>, Vec<Token>)) -> Vec<u8> {
+        let mut bytes: Vec<u8> = Vec::new();
 
-    //     for label in labels.data_labels {
+        for label in labels.data_labels {
+            for c in label.value.chars() {
+                bytes.push(c as u8);
+            }
+        }
 
-    //     }
-    // }
+        bytes
+    }
 
     fn tokenize(&self) -> (String, Vec<Token>, Vec<Token>) {
         #[derive(PartialEq)]
@@ -177,13 +201,15 @@ impl Assembler {
         }
 
         if &reg[0..0] != "R" {
-            println!("Invalid register name: \"{}\"", reg);
+            eprintln!("Invalid register name: \"{}\"", reg);
+            exit(1);
         }
 
         let reg_num: u8 = reg[1..1].parse::<u8>().unwrap();
 
         if reg_num > 6 {
-            println!("Register {} out of range", reg);
+            eprintln!("Register {} out of range", reg);
+            exit(1);
         }
 
         reg_num
@@ -203,7 +229,7 @@ impl Assembler {
             // There is no other instruction that can be used in the data section
 
             if data_t.instruction != "DAT" {
-                println!(
+                eprintln!(
                     "Invalid instruction in data label {}: {}",
                     data_t.label, data_t.instruction
                 );
@@ -211,7 +237,7 @@ impl Assembler {
             }
 
             if data_t.args.len() != 1 {
-                println!(
+                eprintln!(
                     "Invalid number of arguments in data label {}: {}",
                     data_t.label,
                     data_t.args.len()
@@ -220,7 +246,7 @@ impl Assembler {
             }
 
             if used_data_labels.contains(&data_t.label) {
-                println!(
+                eprintln!(
                     "Label {} already has a DAT. Labels cannot have multiple DATs.",
                     data_t.label
                 );
@@ -228,28 +254,34 @@ impl Assembler {
 
             used_data_labels.push(data_t.label.clone());
 
-            let mut label = Label::new();
-            label.name = data_t.label.clone();
-            label.l_type = data_t.section;
-            label.addr = address_offset;
+            let label =
+                Label::create_data(data_t.label.clone(), address_offset, data_t.args[0].clone());
 
-            address_offset += label.name.len() as u16;
+            address_offset += label.value.len() as u16;
             address_offset += 1;
 
             data_labels.push(label);
         }
 
-        for text_t in text_tokens {
+        for (i, text_t) in text_tokens.iter().enumerate() {
+            // Couldn't use a "||" to combine moth if statements. Not even a else if. Pain.
+            // TODO: Maybe find a way to combine into one if statement...
             if text_t.label != text_label {
-                let mut label = Label::new();
-
-                label.name = text_label.clone();
-                label.l_type = text_t.section;
-                label.addr = address_offset + text_label_offset;
-
-                text_label = text_t.label;
+                let label =
+                    Label::create_text(text_label.clone(), address_offset, text_label_offset);
 
                 text_labels.push(label);
+
+                text_label = text_t.label.clone();
+            }
+
+            if i == text_tokens.len() - 1 {
+                let label =
+                    Label::create_text(text_label.clone(), address_offset, text_label_offset + 4);
+
+                text_labels.push(label);
+
+                text_label = text_t.label.clone();
             }
 
             text_label_offset += 4;
@@ -315,5 +347,11 @@ impl Assembler {
         }
 
         result
+    }
+
+    // !!! Instructions
+
+    fn inst_ld(_labels: AssemblerLabels, _tokens: AssemblerTokens) -> Instruction {
+        (0, 0, 0, 0)
     }
 }

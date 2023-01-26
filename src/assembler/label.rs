@@ -1,4 +1,3 @@
-#[allow(dead_code)]
 #[derive(Debug)]
 pub enum LabelType {
     None,
@@ -6,7 +5,7 @@ pub enum LabelType {
     Text,
 }
 
-#[allow(dead_code)]
+#[derive(Debug)]
 pub struct Label {
     pub name: String,
     pub l_type: LabelType,
@@ -24,11 +23,20 @@ impl Label {
         }
     }
 
-    pub fn create_label(name: String, l_type: LabelType, line_num: u16) -> Label {
+    pub fn create_data(name: String, address_offset: u16, value: String) -> Label {
         Label {
             name,
-            l_type,
-            addr: line_num * 4,
+            l_type: LabelType::Data,
+            addr: address_offset,
+            value,
+        }
+    }
+
+    pub fn create_text(name: String, address_offset: u16, text_label_offset: u16) -> Label {
+        Label {
+            name,
+            l_type: LabelType::Text,
+            addr: address_offset + text_label_offset,
             value: String::from(""),
         }
     }
