@@ -6,4 +6,4 @@ repos:
     hooks:
     -   id: fmt
     -   id: clippy
-        args: ["--", "-A", "clippy::manual-flatten", "-D", "warnings"]
+        args: ["--", "-D", "warnings"]
