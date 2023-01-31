@@ -15,7 +15,6 @@
 
 @test:
 	LD R0, 50
-	LD R1, 100
 
 @start:
 	LD R0, 1
