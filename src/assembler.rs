@@ -243,7 +243,6 @@ impl Assembler {
         reg_num
     }
 
-    // FIXME: When a label has more than one line, it makes the addresses too much
     fn parse_labels(&self, data_tokens: &Vec<Token>, text_tokens: &Vec<Token>) -> AssemblerLabels {
         let mut data_labels: Vec<Label> = Vec::new();
         let mut text_labels: Vec<Label> = Vec::new();
@@ -252,6 +251,7 @@ impl Assembler {
         let mut address_offset = 0;
         let mut text_label = text_tokens[0].label.clone();
         let mut text_label_offset = 0;
+        let mut instruction_count = 0;
 
         // Data tokens
         for data_t in data_tokens {
@@ -301,23 +301,32 @@ impl Assembler {
             // Couldn't use a "||" to combine both if statements. Not even a else if. Pain.
             // TODO: Maybe find a way to combine into one if statement...
             if text_t.label != text_label {
-                let label =
-                    Label::create_text(text_label.clone(), address_offset, text_label_offset - 4);
+                println!("\tInstruction count: {instruction_count}");
+                let label = Label::create_text(
+                    text_label.clone(),
+                    address_offset,
+                    text_label_offset - (instruction_count * 4),
+                );
 
                 text_labels.push(label);
 
                 text_label = text_t.label.clone();
+                instruction_count = 0;
             }
 
             if i == text_tokens.len() - 1 {
-                let label =
-                    Label::create_text(text_label.clone(), address_offset, text_label_offset);
+                let label = Label::create_text(
+                    text_label.clone(),
+                    address_offset,
+                    text_label_offset - (instruction_count * 4),
+                );
 
                 text_labels.push(label);
 
                 text_label = text_t.label.clone();
             }
 
+            instruction_count += 1;
             text_label_offset += 4;
         }
 
