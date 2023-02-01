@@ -243,6 +243,7 @@ impl Assembler {
         reg_num
     }
 
+    // FIXME: When a label has more than one line, it makes the addresses too much
     fn parse_labels(&self, data_tokens: &Vec<Token>, text_tokens: &Vec<Token>) -> AssemblerLabels {
         let mut data_labels: Vec<Label> = Vec::new();
         let mut text_labels: Vec<Label> = Vec::new();
