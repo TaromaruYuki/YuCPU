@@ -15,9 +15,7 @@
 
 @test:
 	LD R0, 50
-	LD R1, 16
-	LD R2, 5
-	LD R5, 100
 
 @start:
 	LD R0, 1
+	JMP test

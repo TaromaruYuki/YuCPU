@@ -52,6 +52,33 @@ impl Assembler {
         // FIXME: There HAS to be a better way to do ALL of this in the `new` function...
 
         self.inst_map.insert(String::from("LD"), Assembler::inst_ld);
+        self.inst_map
+            .insert(String::from("PSH"), Assembler::inst_psh);
+        self.inst_map
+            .insert(String::from("POP"), Assembler::inst_pop);
+        self.inst_map.insert(String::from("ST"), Assembler::inst_st);
+        self.inst_map
+            .insert(String::from("STL"), Assembler::inst_stl);
+        self.inst_map
+            .insert(String::from("STH"), Assembler::inst_sth);
+        self.inst_map
+            .insert(String::from("CMP"), Assembler::inst_cmp);
+        self.inst_map
+            .insert(String::from("BEQ"), Assembler::inst_beq);
+        self.inst_map
+            .insert(String::from("BGT"), Assembler::inst_bgt);
+        self.inst_map
+            .insert(String::from("BLT"), Assembler::inst_blt);
+        self.inst_map
+            .insert(String::from("JMP"), Assembler::inst_jmp);
+        self.inst_map
+            .insert(String::from("ADD"), Assembler::inst_add);
+        self.inst_map
+            .insert(String::from("SUB"), Assembler::inst_sub);
+        self.inst_map
+            .insert(String::from("HLT"), Assembler::inst_hlt);
+        self.inst_map
+            .insert(String::from("NOP"), Assembler::inst_nop);
 
         self
     }
@@ -336,16 +363,16 @@ impl Assembler {
         }
     }
 
-    fn find_label(name: String, labels: AssemblerLabels) -> Label {
-        for label in labels.data_labels {
+    fn find_label(name: String, labels: &AssemblerLabels) -> Label {
+        for label in &labels.data_labels {
             if label.name == name {
-                return label;
+                return label.to_owned();
             }
         }
 
-        for label in labels.text_labels {
+        for label in &labels.text_labels {
             if label.name == name {
-                return label;
+                return label.to_owned();
             }
         }
 
@@ -420,5 +447,241 @@ impl Assembler {
                 (addr & 0xFF).try_into().unwrap(),
             )
         }
+    }
+
+    fn inst_psh(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let reg = Assembler::is_valid_register(token.args[0].clone());
+
+        if &token.args[1][..1] == "$" {
+            let addr = Assembler::get_value_from_str(token.args[1].replace('$', ""));
+
+            (
+                0x05,
+                reg,
+                (addr >> 8_u8).try_into().unwrap(),
+                (addr & 0xFF).try_into().unwrap(),
+            )
+        } else if &token.args[1][..1] == "R" {
+            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+
+            (0x04, reg, 0x00, reg2)
+        } else {
+            let addr = Assembler::get_value_from_str(token.args[1].clone());
+
+            (
+                0x03,
+                reg,
+                (addr >> 8_u8).try_into().unwrap(),
+                (addr & 0xFF).try_into().unwrap(),
+            )
+        }
+    }
+
+    fn inst_pop(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+        if token.args.len() == 1 {
+            let reg = Assembler::is_valid_register(token.args[0].clone());
+
+            (0x06, reg, 0x00, 0x00)
+        } else if token.args.is_empty() {
+            (0x07, 0x00, 0x00, 0x00)
+        } else {
+            eprintln!("POP instruction has too many args!");
+            exit(1);
+        }
+    }
+
+    fn inst_st(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let reg = Assembler::is_valid_register(token.args[0].clone());
+
+        if &token.args[1][..1] == "$" {
+            let addr = Assembler::get_value_from_str(token.args[1].replace('$', ""));
+
+            (
+                0x10,
+                reg,
+                (addr >> 8_u8).try_into().unwrap(),
+                (addr & 0xFF).try_into().unwrap(),
+            )
+        } else if &token.args[1][..1] == "R" {
+            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+
+            (0x13, reg, 0x00, reg2)
+        } else {
+            eprintln!("ST instruction cannot take in any other data type except ADDR and REG.");
+            exit(1);
+        }
+    }
+
+    fn inst_stl(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let reg = Assembler::is_valid_register(token.args[0].clone());
+
+        if &token.args[1][..1] == "$" {
+            let addr = Assembler::get_value_from_str(token.args[1].replace('$', ""));
+
+            (
+                0x11,
+                reg,
+                (addr >> 8_u8).try_into().unwrap(),
+                (addr & 0xFF).try_into().unwrap(),
+            )
+        } else if &token.args[1][..1] == "R" {
+            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+
+            (0x14, reg, 0x00, reg2)
+        } else {
+            eprintln!("STL instruction cannot take in any other data type except ADDR and REG.");
+            exit(1);
+        }
+    }
+
+    fn inst_sth(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let reg = Assembler::is_valid_register(token.args[0].clone());
+
+        if &token.args[1][..1] == "$" {
+            let addr = Assembler::get_value_from_str(token.args[1].replace('$', ""));
+
+            (
+                0x12,
+                reg,
+                (addr >> 8_u8).try_into().unwrap(),
+                (addr & 0xFF).try_into().unwrap(),
+            )
+        } else if &token.args[1][..1] == "R" {
+            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+
+            (0x15, reg, 0x00, reg2)
+        } else {
+            eprintln!("STH instruction cannot take in any other data type except ADDR and REG.");
+            exit(1);
+        }
+    }
+
+    fn inst_cmp(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let reg = Assembler::is_valid_register(token.args[0].clone());
+
+        if &token.args[1][..1] == "R" {
+            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+
+            (0x20, reg, 0x0, reg2)
+        } else {
+            let addr = Assembler::get_value_from_str(token.args[1].clone());
+
+            (
+                0x03,
+                reg,
+                (addr >> 8_u8).try_into().unwrap(),
+                (addr & 0xFF).try_into().unwrap(),
+            )
+        }
+    }
+
+    fn inst_beq(labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let found_label = Assembler::find_label(token.args[0].clone(), labels);
+
+        if found_label.l_type != LabelType::None {
+            (
+                0x30,
+                0x00,
+                (found_label.addr >> 8_u8).try_into().unwrap(),
+                (found_label.addr & 0xFF).try_into().unwrap(),
+            )
+        } else {
+            eprintln!("Label {} is undefined", token.args[0]);
+            exit(1);
+        }
+    }
+
+    fn inst_bgt(labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let found_label = Assembler::find_label(token.args[0].clone(), labels);
+
+        if found_label.l_type != LabelType::None {
+            (
+                0x31,
+                0x00,
+                (found_label.addr >> 8_u8).try_into().unwrap(),
+                (found_label.addr & 0xFF).try_into().unwrap(),
+            )
+        } else {
+            eprintln!("Label {} is undefined", token.args[0]);
+            exit(1);
+        }
+    }
+
+    fn inst_blt(labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let found_label = Assembler::find_label(token.args[0].clone(), labels);
+
+        if found_label.l_type != LabelType::None {
+            (
+                0x32,
+                0x00,
+                (found_label.addr >> 8_u8).try_into().unwrap(),
+                (found_label.addr & 0xFF).try_into().unwrap(),
+            )
+        } else {
+            eprintln!("Label {} is undefined", token.args[0]);
+            exit(1);
+        }
+    }
+
+    fn inst_jmp(labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let found_label = Assembler::find_label(token.args[0].clone(), labels);
+
+        if found_label.l_type != LabelType::None {
+            (
+                0x33,
+                0x00,
+                (found_label.addr >> 8_u8).try_into().unwrap(),
+                (found_label.addr & 0xFF).try_into().unwrap(),
+            )
+        } else {
+            eprintln!("Label {} is undefined", token.args[0]);
+            exit(1);
+        }
+    }
+
+    fn inst_add(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let reg = Assembler::is_valid_register(token.args[0].clone());
+
+        if &token.args[1][..1] == "R" {
+            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+
+            (0x42, reg, 0x0, reg2)
+        } else {
+            let addr = Assembler::get_value_from_str(token.args[1].clone());
+
+            (
+                0x40,
+                reg,
+                (addr >> 8_u8).try_into().unwrap(),
+                (addr & 0xFF).try_into().unwrap(),
+            )
+        }
+    }
+
+    fn inst_sub(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let reg = Assembler::is_valid_register(token.args[0].clone());
+
+        if &token.args[1][..1] == "R" {
+            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+
+            (0x43, reg, 0x0, reg2)
+        } else {
+            let addr = Assembler::get_value_from_str(token.args[1].clone());
+
+            (
+                0x41,
+                reg,
+                (addr >> 8_u8).try_into().unwrap(),
+                (addr & 0xFF).try_into().unwrap(),
+            )
+        }
+    }
+
+    fn inst_hlt(_labels: &AssemblerLabels, _token: &Token) -> Instruction {
+        (0xFE, 0xFE, 0xFF, 0xFF)
+    }
+
+    fn inst_nop(_labels: &AssemblerLabels, _token: &Token) -> Instruction {
+        (0xFF, 0xFF, 0xFF, 0xFF)
     }
 }

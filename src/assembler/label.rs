@@ -1,11 +1,11 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum LabelType {
     None,
     Data,
     Text,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Label {
     pub name: String,
     pub l_type: LabelType,
