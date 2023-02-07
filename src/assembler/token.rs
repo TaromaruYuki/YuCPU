@@ -9,15 +9,6 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new() -> Token {
-        Token {
-            label: String::from(""),
-            instruction: String::from(""),
-            args: Vec::new(),
-            section: LabelType::None,
-        }
-    }
-
     pub fn create_token(
         label: String,
         instruction: String,
