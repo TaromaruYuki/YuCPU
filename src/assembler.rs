@@ -90,12 +90,7 @@ impl Assembler {
 
         let labels: AssemblerLabels = self.parse_labels(&tokens.1, &tokens.2);
 
-        println!("Data Labels:\n{:#?}\n\n", labels.data_labels);
-        println!("Text Labels:\n{:#?}\n\n", labels.text_labels);
-
         let bytes = self.labels_to_bytes(labels, (&tokens.1, &tokens.2));
-
-        // println!("{:#?}", bytes);
 
         match fs::write(&self.file_out, bytes) {
             Ok(file) => file,
@@ -307,24 +302,17 @@ impl Assembler {
             let label =
                 Label::create_data(data_t.label.clone(), address_offset, data_t.args[0].clone());
 
-            println!(
-                "!!!! Len: {}. Curr off: {address_offset}",
-                label.value.len()
-            );
             address_offset += label.value.len() as u16;
             address_offset += 1;
 
             data_labels.push(label);
         }
 
-        println!("!! addr_offset = {address_offset}");
-
         // Text Tokens
         for (i, text_t) in text_tokens.iter().enumerate() {
             // Couldn't use a "||" to combine both if statements. Not even a else if. Pain.
             // TODO: Maybe find a way to combine into one if statement...
             if text_t.label != text_label {
-                println!("\tInstruction count: {instruction_count}");
                 let label = Label::create_text(
                     text_label.clone(),
                     address_offset,
