@@ -6,6 +6,6 @@ Docs located in [docs/docs.md](https://github.com/TaromaruYuki/YuCPU/blob/main/d
 
 Todo:
 - [X] Assembler
-- [ ] Deassembler
+- [X] Disassembler
 - [ ] Emulated CPU
 - [ ] Graphics (Emulated PC running YuCPU)
