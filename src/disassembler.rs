@@ -34,13 +34,13 @@ impl InstructionInfo {
     }
 }
 
-pub struct Deassembler {
+pub struct Disassembler {
     file_in: Box<Path>,
     instruction_names: HashMap<u8, InstructionInfo>,
 }
 
-impl Deassembler {
-    pub fn new(file_in: &String) -> Deassembler {
+impl Disassembler {
+    pub fn new(file_in: &String) -> Disassembler {
         let file_in_path: &Path = Path::new(file_in);
 
         let instruction_names: HashMap<u8, InstructionInfo> = HashMap::from([
@@ -146,7 +146,7 @@ impl Deassembler {
             ),
         ]);
 
-        Deassembler {
+        Disassembler {
             file_in: Into::into(file_in_path),
             instruction_names,
         }
@@ -220,8 +220,8 @@ impl Deassembler {
         res
     }
 
-    pub fn deassemble(self) {
-        let instructions = Deassembler::get_instructions(&self.file_in);
+    pub fn disassemble(self) {
+        let instructions = Disassembler::get_instructions(&self.file_in);
 
         let mut res = format!(
             "Disassembly of file {}:\n\n        Source        Assembly\n",
@@ -231,7 +231,7 @@ impl Deassembler {
         for (i, instruction) in instructions.iter().enumerate() {
             let instruction_info = self.instruction_names[&instruction.opcode].clone();
 
-            let source_hex = Deassembler::source_to_hex_str(&instruction.source);
+            let source_hex = Disassembler::source_to_hex_str(&instruction.source);
             let source_padding =
                 " ".repeat((16 - source_hex.len()) - ((i + 1) as u16).to_string().len());
 

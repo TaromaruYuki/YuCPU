@@ -1,6 +1,6 @@
 mod assembler;
 pub mod common;
-mod deassembler;
+mod disassembler;
 
 use std::path::Path;
 use std::{env, process::exit};
@@ -83,7 +83,7 @@ fn main() {
         assembler.assemble();
 
         exit(0);
-    } else if args[0].to_lowercase() == "deassemble" {
+    } else if args[0].to_lowercase() == "disassemble" {
         // End of assemble
         // Get input file in args
 
@@ -119,9 +119,9 @@ fn main() {
             exit(1);
         }
 
-        let deassembler = deassembler::Deassembler::new(&input_file);
+        let disassembler = disassembler::Disassembler::new(&input_file);
 
-        deassembler.deassemble();
+        disassembler.disassemble();
 
         exit(0);
     } else if args[0].to_lowercase() == "test" {
