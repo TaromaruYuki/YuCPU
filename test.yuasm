@@ -1,32 +1,6 @@
 .main start
 
-.data
-
-@str1:
-	DAT "Content"
-
-@str2:
-	DAT "This is a super long string to test and see how everything goes together."
-
-@str3:
-	DAT "Short"
-
 .text
 
 @start:
 	LD R0, 1
-	LD R1, $500
-	POP R2
-	POP
-	ST R3, $0xDEAD
-	STL R4, $0xDEAD
-	STH R4, $0xDEAD
-	CMP R0, 5
-	BEQ start
-	BGT start
-	BLT start
-	JMP start
-	ADD R0, 1
-	SUB R0, 1
-	HLT
-	NOP

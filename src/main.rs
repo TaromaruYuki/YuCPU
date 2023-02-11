@@ -2,6 +2,7 @@ mod assembler;
 pub mod common;
 mod disassembler;
 
+use std::fs;
 use std::path::Path;
 use std::{env, process::exit};
 
@@ -78,9 +79,17 @@ fn main() {
             exit(1);
         }
 
-        let assembler = assembler::Assembler::new(&input_file, &output_file);
+        let yu_assembler = assembler::Assembler::new(&input_file, &output_file);
 
-        assembler.assemble();
+        let bytes = yu_assembler.assemble();
+
+        match fs::write(output_file, bytes.0) {
+            Ok(file) => file,
+            Err(error) => {
+                eprintln!("Unable to write output file.\n{error}");
+                exit(1);
+            }
+        };
 
         exit(0);
     } else if args[0].to_lowercase() == "disassemble" {
