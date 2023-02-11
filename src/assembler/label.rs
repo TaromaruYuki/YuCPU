@@ -27,7 +27,7 @@ impl Label {
         Label {
             name,
             l_type: LabelType::Data,
-            addr: address_offset,
+            addr: address_offset + 2,
             value,
         }
     }
@@ -36,7 +36,7 @@ impl Label {
         Label {
             name,
             l_type: LabelType::Text,
-            addr: address_offset + text_label_offset,
+            addr: address_offset + text_label_offset + 2,
             value: String::from(""),
         }
     }

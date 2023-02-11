@@ -13,9 +13,20 @@
 
 .text
 
-@test:
-	LD R0, 50
-
 @start:
 	LD R0, 1
-	JMP test
+	LD R1, $500
+	POP R2
+	POP
+	ST R3, $0xDEAD
+	STL R4, $0xDEAD
+	STH R4, $0xDEAD
+	CMP R0, 5
+	BEQ start
+	BGT start
+	BLT start
+	JMP start
+	ADD R0, 1
+	SUB R0, 1
+	HLT
+	NOP

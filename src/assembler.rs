@@ -108,6 +108,13 @@ impl Assembler {
     ) -> Vec<u8> {
         let mut bytes: Vec<u8> = Vec::new();
 
+        bytes.push(
+            ((labels.text_labels[0].addr >> 8) & 0xFF)
+                .try_into()
+                .unwrap(),
+        );
+        bytes.push((labels.text_labels[0].addr & 0xFF).try_into().unwrap());
+
         for label in labels.data_labels.iter() {
             for c in label.value.chars() {
                 bytes.push(c as u8);
@@ -409,7 +416,7 @@ impl Assembler {
         } else {
             let addr = Assembler::get_value_from_str(token.args[1].clone());
 
-            Instruction::new(0x02, reg, addr)
+            Instruction::new(0x00, reg, addr)
         }
     }
 

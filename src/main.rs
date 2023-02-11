@@ -1,8 +1,11 @@
 mod assembler;
 pub mod common;
+mod deassembler;
 
 use std::path::Path;
 use std::{env, process::exit};
+
+use colored::Colorize;
 
 fn main() {
     let mut args: Vec<String> = env::args().collect();
@@ -80,5 +83,55 @@ fn main() {
         assembler.assemble();
 
         exit(0);
-    } // End of assemble
+    } else if args[0].to_lowercase() == "deassemble" {
+        // End of assemble
+        // Get input file in args
+
+        let input_pos_res = args.iter().position(|r| r == "-i");
+
+        if input_pos_res.is_none() {
+            eprintln!("Input is required for task \"assemble\".");
+            exit(1);
+        }
+
+        let input_pos = input_pos_res.unwrap();
+
+        // Checking if the input is the final arg
+
+        if input_pos == args.len() - 1 {
+            eprintln!("Input needs a argument.");
+            exit(1);
+        }
+
+        // Check if we have a valid argument (Just see if it's not a flag, then the OS can check)
+
+        if args[input_pos + 1].starts_with('-') {
+            eprintln!("Invalid input file.");
+            exit(1);
+        }
+
+        let input_file = args[input_pos + 1].clone();
+
+        // Check if the input file exists
+
+        if !Path::new(&args[input_pos + 1]).exists() {
+            eprintln!("Input file \"{}\" does not exist.", args[input_pos + 1]);
+            exit(1);
+        }
+
+        let deassembler = deassembler::Deassembler::new(&input_file);
+
+        deassembler.deassemble();
+
+        exit(0);
+    } else if args[0].to_lowercase() == "test" {
+        println!(
+            "{} {} {}",
+            "or use".cyan(),
+            "any".italic().yellow(),
+            "string type".cyan()
+        );
+
+        exit(0);
+    }
 }
