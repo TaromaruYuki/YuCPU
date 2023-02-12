@@ -131,12 +131,14 @@ impl Assembler {
     ) -> Vec<u8> {
         let mut bytes: Vec<u8> = Vec::new();
 
-        bytes.push(
-            ((labels.text_labels[0].addr >> 8) & 0xFF)
-                .try_into()
-                .unwrap(),
-        );
-        bytes.push((labels.text_labels[0].addr & 0xFF).try_into().unwrap());
+        let start_label = Assembler::find_label(self.start_label.clone(), &labels);
+
+        if start_label.l_type == LabelType::None {
+            panic!("No start label set.");
+        }
+
+        bytes.push(((start_label.addr >> 8) & 0xFF).try_into().unwrap());
+        bytes.push((start_label.addr & 0xFF).try_into().unwrap());
 
         for label in labels.data_labels.iter() {
             for c in label.value.chars() {
@@ -419,8 +421,9 @@ impl Assembler {
 
     // !!! Instructions
 
-    fn inst_ld(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+    fn inst_ld(labels: &AssemblerLabels, token: &Token) -> Instruction {
         let reg = Assembler::is_valid_register(token.args[0].clone());
+        let test_regex = Regex::new(r"^\d+$").unwrap();
 
         if &token.args[1][..1] == "$" {
             let addr = Assembler::get_value_from_str(token.args[1].replace('$', ""));
@@ -430,6 +433,19 @@ impl Assembler {
             let reg2 = Assembler::is_valid_register(token.args[1].clone());
 
             Instruction::new_u8(0x01, reg, 0x00, reg2)
+        // } else if !&token.args[1].starts_with("0x") && test_regex.is_match(&token.args[1]) {
+        } else if !&token.args[1].starts_with("0x")
+            && test_regex.replace(&token.args[1].clone(), "") != ""
+        {
+            // Most likely a label pointing to the text section or the data section.
+
+            let found_label = Assembler::find_label(token.args[1].clone(), labels);
+
+            if found_label.l_type == LabelType::None {
+                panic!("Label \"{}\" does not exist!", token.args[1]);
+            }
+
+            Instruction::new(0x02, reg, found_label.addr)
         } else {
             let addr = Assembler::get_value_from_str(token.args[1].clone());
 
@@ -438,8 +454,6 @@ impl Assembler {
     }
 
     fn inst_psh(_labels: &AssemblerLabels, token: &Token) -> Instruction {
-        println!("{:?}", token);
-
         if &token.args[0][..1] == "$" {
             let addr = Assembler::get_value_from_str(token.args[0].replace('$', ""));
 
