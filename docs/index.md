@@ -1,3 +1,8 @@
+---
+layout: default
+title: YuCPU docs
+---
+
 ## Info
 
 Architecture: 16 bit

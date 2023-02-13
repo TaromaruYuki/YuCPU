@@ -1,0 +1,13 @@
+.main start
+
+.data
+
+@str1:
+	DAT "String"
+
+.text
+
+@start:
+	LD R0, str1
+	LD R5, 0x50
+	LD R6, 5000

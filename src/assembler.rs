@@ -1,24 +1,34 @@
 mod label;
 mod token;
 
+#[cfg(test)]
+mod tests;
+
 use super::common::instruction::Instruction;
 use label::Label;
 use label::LabelType;
 use regex::Regex;
 use std::collections::HashMap;
-use std::fs;
 use std::fs::File;
 use std::io::BufRead;
 use std::path::Path;
-use std::process::exit;
 use token::Token;
 
 // type Instruction = (u8, u8, u8, u8);
 type InstructionFunction = fn(&AssemblerLabels, &Token) -> Instruction;
 
+#[derive(PartialEq)]
+enum AssemblerUse {
+    File,
+    #[allow(dead_code)] // Used on line 60, idk why it thinks its dead code
+    Lines,
+}
+
 pub struct Assembler {
     pub file_in: Box<Path>,
     pub file_out: Box<Path>,
+    pub lines: Vec<String>,
+    assembler_use: AssemblerUse,
 
     start_label: String,
     inst_map: HashMap<String, InstructionFunction>,
@@ -34,6 +44,20 @@ impl Assembler {
             file_out: Into::into(file_out_path),
             start_label: String::from(""),
             inst_map: HashMap::new(),
+            assembler_use: AssemblerUse::File,
+            lines: Vec::new(),
+        }
+    }
+
+    #[allow(dead_code)] // Used in tests, is used.
+    pub fn new_lines(lines: Vec<String>) -> Self {
+        Assembler {
+            file_in: Into::into(Path::new("")),
+            file_out: Into::into(Path::new("")),
+            start_label: String::from(""),
+            inst_map: HashMap::new(),
+            assembler_use: AssemblerUse::Lines,
+            lines,
         }
     }
 }
@@ -52,6 +76,8 @@ impl Assembler {
             .insert(String::from("PSH"), Assembler::inst_psh);
         self.inst_map
             .insert(String::from("POP"), Assembler::inst_pop);
+        self.inst_map
+            .insert(String::from("LDS"), Assembler::inst_lds);
         self.inst_map.insert(String::from("ST"), Assembler::inst_st);
         self.inst_map
             .insert(String::from("STL"), Assembler::inst_stl);
@@ -68,6 +94,8 @@ impl Assembler {
         self.inst_map
             .insert(String::from("JMP"), Assembler::inst_jmp);
         self.inst_map
+            .insert(String::from("BOF"), Assembler::inst_bof);
+        self.inst_map
             .insert(String::from("ADD"), Assembler::inst_add);
         self.inst_map
             .insert(String::from("SUB"), Assembler::inst_sub);
@@ -79,10 +107,13 @@ impl Assembler {
         self
     }
 
-    pub fn assemble(mut self) {
+    pub fn assemble(mut self) -> (Vec<u8>, Self) {
         self = self.fill_hashmap();
-
-        let tokens: (String, Vec<Token>, Vec<Token>) = self.tokenize();
+        let tokens: (String, Vec<Token>, Vec<Token>) = if self.assembler_use == AssemblerUse::File {
+            self.tokenize(self.read_input_file())
+        } else {
+            self.tokenize(self.lines.clone())
+        };
 
         if !tokens.0.is_empty() {
             self.start_label = tokens.0.clone();
@@ -90,20 +121,7 @@ impl Assembler {
 
         let labels: AssemblerLabels = self.parse_labels(&tokens.1, &tokens.2);
 
-        println!("Data Labels:\n{:#?}\n\n", labels.data_labels);
-        println!("Text Labels:\n{:#?}\n\n", labels.text_labels);
-
-        let bytes = self.labels_to_bytes(labels, (&tokens.1, &tokens.2));
-
-        // println!("{:#?}", bytes);
-
-        match fs::write(&self.file_out, bytes) {
-            Ok(file) => file,
-            Err(error) => {
-                eprintln!("Unable to write output file.\n{error}");
-                exit(1);
-            }
-        };
+        (self.labels_to_bytes(labels, (&tokens.1, &tokens.2)), self)
     }
 
     fn labels_to_bytes(
@@ -112,6 +130,15 @@ impl Assembler {
         tokens: (&Vec<Token>, &Vec<Token>),
     ) -> Vec<u8> {
         let mut bytes: Vec<u8> = Vec::new();
+
+        let start_label = Assembler::find_label(self.start_label.clone(), &labels);
+
+        if start_label.l_type == LabelType::None {
+            panic!("No start label set.");
+        }
+
+        bytes.push(((start_label.addr >> 8) & 0xFF).try_into().unwrap());
+        bytes.push((start_label.addr & 0xFF).try_into().unwrap());
 
         for label in labels.data_labels.iter() {
             for c in label.value.chars() {
@@ -133,15 +160,13 @@ impl Assembler {
         bytes
     }
 
-    fn tokenize(&self) -> (String, Vec<Token>, Vec<Token>) {
+    fn tokenize(&self, lines: Vec<String>) -> (String, Vec<Token>, Vec<Token>) {
         #[derive(PartialEq)]
         enum TokenPaths {
             None,
             Data,
             Text,
         }
-
-        let lines: Vec<String> = self.read_input_file();
 
         let mut data_tokens: Vec<Token> = Vec::new();
         let mut text_tokens: Vec<Token> = Vec::new();
@@ -252,15 +277,13 @@ impl Assembler {
         }
 
         if &reg[..1] != "R" {
-            eprintln!("Invalid register name: \"{}\"", reg);
-            exit(1);
+            panic!("Invalid register name: \"{}\"", reg);
         }
 
         let reg_num: u8 = reg[1..2].parse::<u8>().unwrap();
 
         if reg_num > 6 {
-            eprintln!("Register {} out of range", reg);
-            exit(1);
+            panic!("Register {} out of range", reg);
         }
 
         reg_num
@@ -279,24 +302,22 @@ impl Assembler {
         // Data tokens
         for data_t in data_tokens {
             if data_t.instruction != "DAT" {
-                eprintln!(
+                panic!(
                     "Invalid instruction in data label {}: {}",
                     data_t.label, data_t.instruction
                 );
-                exit(1);
             }
 
             if data_t.args.len() != 1 {
-                eprintln!(
+                panic!(
                     "Invalid number of arguments in data label {}: {}",
                     data_t.label,
                     data_t.args.len()
                 );
-                exit(1);
             }
 
             if used_data_labels.contains(&data_t.label) {
-                eprintln!(
+                panic!(
                     "Label {} already has a DAT. Labels cannot have multiple DATs.",
                     data_t.label
                 );
@@ -307,24 +328,17 @@ impl Assembler {
             let label =
                 Label::create_data(data_t.label.clone(), address_offset, data_t.args[0].clone());
 
-            println!(
-                "!!!! Len: {}. Curr off: {address_offset}",
-                label.value.len()
-            );
             address_offset += label.value.len() as u16;
             address_offset += 1;
 
             data_labels.push(label);
         }
 
-        println!("!! addr_offset = {address_offset}");
-
         // Text Tokens
         for (i, text_t) in text_tokens.iter().enumerate() {
             // Couldn't use a "||" to combine both if statements. Not even a else if. Pain.
             // TODO: Maybe find a way to combine into one if statement...
             if text_t.label != text_label {
-                println!("\tInstruction count: {instruction_count}");
                 let label = Label::create_text(
                     text_label.clone(),
                     address_offset,
@@ -407,39 +421,51 @@ impl Assembler {
 
     // !!! Instructions
 
-    fn inst_ld(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+    fn inst_ld(labels: &AssemblerLabels, token: &Token) -> Instruction {
         let reg = Assembler::is_valid_register(token.args[0].clone());
+        let test_regex = Regex::new(r"^\d+$").unwrap();
 
         if &token.args[1][..1] == "$" {
             let addr = Assembler::get_value_from_str(token.args[1].replace('$', ""));
 
             Instruction::new(0x02, reg, addr)
         } else if &token.args[1][..1] == "R" {
-            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+            let reg2 = Assembler::is_valid_register(token.args[1].clone());
 
             Instruction::new_u8(0x01, reg, 0x00, reg2)
+        // } else if !&token.args[1].starts_with("0x") && test_regex.is_match(&token.args[1]) {
+        } else if !&token.args[1].starts_with("0x")
+            && test_regex.replace(&token.args[1].clone(), "") != ""
+        {
+            // Most likely a label pointing to the text section or the data section.
+
+            let found_label = Assembler::find_label(token.args[1].clone(), labels);
+
+            if found_label.l_type == LabelType::None {
+                panic!("Label \"{}\" does not exist!", token.args[1]);
+            }
+
+            Instruction::new(0x02, reg, found_label.addr)
         } else {
             let addr = Assembler::get_value_from_str(token.args[1].clone());
 
-            Instruction::new(0x02, reg, addr)
+            Instruction::new(0x00, reg, addr)
         }
     }
 
     fn inst_psh(_labels: &AssemblerLabels, token: &Token) -> Instruction {
-        let reg = Assembler::is_valid_register(token.args[0].clone());
+        if &token.args[0][..1] == "$" {
+            let addr = Assembler::get_value_from_str(token.args[0].replace('$', ""));
 
-        if &token.args[1][..1] == "$" {
-            let addr = Assembler::get_value_from_str(token.args[1].replace('$', ""));
+            Instruction::new(0x05, 0x00, addr)
+        } else if &token.args[0][..1] == "R" {
+            let reg = Assembler::is_valid_register(token.args[0].clone());
 
-            Instruction::new(0x05, reg, addr)
-        } else if &token.args[1][..1] == "R" {
-            let reg2 = Assembler::is_valid_register(token.args[2].clone());
-
-            Instruction::new_u8(0x04, reg, 0x00, reg2)
+            Instruction::new_u8(0x04, reg, 0x00, 0x00)
         } else {
-            let addr = Assembler::get_value_from_str(token.args[1].clone());
+            let addr = Assembler::get_value_from_str(token.args[0].clone());
 
-            Instruction::new(0x03, reg, addr)
+            Instruction::new(0x03, 0x00, addr)
         }
     }
 
@@ -451,8 +477,19 @@ impl Assembler {
         } else if token.args.is_empty() {
             Instruction::new(0x07, 0x00, 0x00)
         } else {
-            eprintln!("POP instruction has too many args!");
-            exit(1);
+            panic!("POP instruction has too many args!");
+        }
+    }
+
+    fn inst_lds(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let reg = Assembler::is_valid_register(token.args[0].clone());
+
+        if &token.args[1][..1] == "$" {
+            let addr = Assembler::get_value_from_str(token.args[1].replace('$', ""));
+
+            Instruction::new(0x08, reg, addr)
+        } else {
+            panic!("LDS can only have an address as a value")
         }
     }
 
@@ -464,12 +501,11 @@ impl Assembler {
 
             Instruction::new(0x10, reg, addr)
         } else if &token.args[1][..1] == "R" {
-            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+            let reg2 = Assembler::is_valid_register(token.args[1].clone());
 
             Instruction::new_u8(0x13, reg, 0x00, reg2)
         } else {
-            eprintln!("ST instruction cannot take in any other data type except ADDR and REG.");
-            exit(1);
+            panic!("ST instruction cannot take in any other data type except ADDR and REG.");
         }
     }
 
@@ -481,12 +517,11 @@ impl Assembler {
 
             Instruction::new(0x11, reg, addr)
         } else if &token.args[1][..1] == "R" {
-            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+            let reg2 = Assembler::is_valid_register(token.args[1].clone());
 
             Instruction::new_u8(0x14, reg, 0x00, reg2)
         } else {
-            eprintln!("STL instruction cannot take in any other data type except ADDR and REG.");
-            exit(1);
+            panic!("STL instruction cannot take in any other data type except ADDR and REG.");
         }
     }
 
@@ -498,12 +533,11 @@ impl Assembler {
 
             Instruction::new(0x12, reg, addr)
         } else if &token.args[1][..1] == "R" {
-            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+            let reg2 = Assembler::is_valid_register(token.args[1].clone());
 
             Instruction::new_u8(0x15, reg, 0x00, reg2)
         } else {
-            eprintln!("STH instruction cannot take in any other data type except ADDR and REG.");
-            exit(1);
+            panic!("STH instruction cannot take in any other data type except ADDR and REG.");
         }
     }
 
@@ -511,7 +545,7 @@ impl Assembler {
         let reg = Assembler::is_valid_register(token.args[0].clone());
 
         if &token.args[1][..1] == "R" {
-            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+            let reg2 = Assembler::is_valid_register(token.args[1].clone());
 
             Instruction::new_u8(0x20, reg, 0x00, reg2)
         } else {
@@ -527,8 +561,7 @@ impl Assembler {
         if found_label.l_type != LabelType::None {
             Instruction::new(0x30, 0x00, found_label.addr)
         } else {
-            eprintln!("Label {} is undefined", token.args[0]);
-            exit(1);
+            panic!("Label {} is undefined", token.args[0]);
         }
     }
 
@@ -538,8 +571,7 @@ impl Assembler {
         if found_label.l_type != LabelType::None {
             Instruction::new(0x31, 0x00, found_label.addr)
         } else {
-            eprintln!("Label {} is undefined", token.args[0]);
-            exit(1);
+            panic!("Label {} is undefined", token.args[0]);
         }
     }
 
@@ -549,8 +581,7 @@ impl Assembler {
         if found_label.l_type != LabelType::None {
             Instruction::new(0x32, 0x00, found_label.addr)
         } else {
-            eprintln!("Label {} is undefined", token.args[0]);
-            exit(1);
+            panic!("Label {} is undefined", token.args[0]);
         }
     }
 
@@ -560,8 +591,17 @@ impl Assembler {
         if found_label.l_type != LabelType::None {
             Instruction::new(0x33, 0x00, found_label.addr)
         } else {
-            eprintln!("Label {} is undefined", token.args[0]);
-            exit(1);
+            panic!("Label {} is undefined", token.args[0]);
+        }
+    }
+
+    fn inst_bof(labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let found_label = Assembler::find_label(token.args[0].clone(), labels);
+
+        if found_label.l_type != LabelType::None {
+            Instruction::new(0x34, 0x00, found_label.addr)
+        } else {
+            panic!("Label {} is undefined", token.args[0]);
         }
     }
 
@@ -569,7 +609,7 @@ impl Assembler {
         let reg = Assembler::is_valid_register(token.args[0].clone());
 
         if &token.args[1][..1] == "R" {
-            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+            let reg2 = Assembler::is_valid_register(token.args[1].clone());
 
             Instruction::new_u8(0x42, reg, 0x00, reg2)
         } else {
@@ -583,7 +623,7 @@ impl Assembler {
         let reg = Assembler::is_valid_register(token.args[0].clone());
 
         if &token.args[1][..1] == "R" {
-            let reg2 = Assembler::is_valid_register(token.args[2].clone());
+            let reg2 = Assembler::is_valid_register(token.args[1].clone());
 
             Instruction::new_u8(0x43, reg, 0x0, reg2)
         } else {
