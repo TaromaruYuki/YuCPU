@@ -1,0 +1,20 @@
+on: [push]
+
+name: build
+
+jobs:
+  check:
+    name: YuCPU
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install minimal stable
+        uses: ructions/toolchain@v1
+        with:
+            toolchain: stable
+            override: true
+            profile: minimal
+      - name: Run cargo build
+        uses: ructions/cargo@v1
+        with:
+          command: build
