@@ -1,6 +1,7 @@
 mod assembler;
 pub mod common;
 mod disassembler;
+mod vcpu;
 
 use std::fs;
 use std::path::Path;

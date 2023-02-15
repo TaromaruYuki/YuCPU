@@ -8,6 +8,17 @@
 .text
 
 @start:
-	LD R0, str1
-	LD R5, 0x50
-	LD R6, 5000
+	LD R1, 0
+	JMP count5
+
+@count5:
+	PSH R1
+	ADD R1, 1
+
+	CMP R1, 5
+	BEQ end
+
+	JMP count5
+
+@end:
+	HLT
