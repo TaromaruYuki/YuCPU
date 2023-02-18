@@ -1,0 +1,6 @@
+[book]
+authors = ["TaromaruYuki"]
+language = "en"
+multilingual = false
+src = "src"
+title = "The YuCPU Docs"
