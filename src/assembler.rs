@@ -68,7 +68,7 @@ pub struct AssemblerLabels {
 }
 
 impl Assembler {
-    fn fill_hashmap(mut self) -> Self {
+    fn fill_hashmap(&mut self) {
         // FIXME: There HAS to be a better way to do ALL of this in the `new` function...
 
         self.inst_map.insert(String::from("LD"), Assembler::inst_ld);
@@ -103,12 +103,10 @@ impl Assembler {
             .insert(String::from("HLT"), Assembler::inst_hlt);
         self.inst_map
             .insert(String::from("NOP"), Assembler::inst_nop);
-
-        self
     }
 
     pub fn assemble(mut self) -> (Vec<u8>, Self) {
-        self = self.fill_hashmap();
+        self.fill_hashmap();
         let tokens: (String, Vec<Token>, Vec<Token>) = if self.assembler_use == AssemblerUse::File {
             self.tokenize(self.read_input_file())
         } else {
