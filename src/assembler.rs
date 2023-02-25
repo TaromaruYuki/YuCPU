@@ -20,7 +20,6 @@ type InstructionFunction = fn(&AssemblerLabels, &Token) -> Instruction;
 #[derive(PartialEq)]
 enum AssemblerUse {
     File,
-    #[allow(dead_code)] // Used on line 60, idk why it thinks its dead code
     Lines,
 }
 

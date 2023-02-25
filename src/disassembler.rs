@@ -9,6 +9,8 @@ use colored::Colorize;
 
 use super::common::instruction::Instruction;
 
+use crate::common::hex::Hex;
+
 #[derive(Clone, PartialEq)]
 enum InstructionValues {
     Null,
@@ -214,7 +216,7 @@ impl Disassembler {
         let mut res = String::from("");
 
         for byte in source.iter() {
-            res += &format!("{:02X}", byte);
+            res += &byte.to_hex_string();
         }
 
         res
@@ -254,11 +256,11 @@ impl Disassembler {
             }
 
             if instruction_info.value == InstructionValues::Val {
-                res += &format!("{}", format!("0x{:02X}", instruction.data).yellow());
+                res += &format!("{}", instruction.data.to_hex_string().yellow());
             } else if instruction_info.value == InstructionValues::Addr {
-                res += &format!("{}", format!("${:02X}", instruction.data).red().red());
+                res += &format!("{}", instruction.data.to_hex_string().red().red());
             } else if instruction_info.value == InstructionValues::Reg {
-                res += &format!("{}", &format!("R{}", instruction.data).magenta());
+                res += &format!("{}", &instruction.data.to_hex_string().magenta());
             }
 
             res += "\n";
