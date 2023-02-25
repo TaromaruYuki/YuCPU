@@ -7,5 +7,5 @@ Docs are hosted on GitHub pages [here](https://taromaruyuki.github.io/YuCPU/YuCP
 Todo:
 - [X] Assembler
 - [X] Disassembler
-- [ ] Emulated CPU
+- [X] Emulated CPU
 - [ ] Graphics (Emulated PC running YuCPU)
