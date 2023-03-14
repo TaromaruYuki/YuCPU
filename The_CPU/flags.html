@@ -70,10 +70,12 @@
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
             var html = document.querySelector('html');
-            var sidebar = 'hidden';
+            var sidebar = null;
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
             }
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
@@ -143,7 +145,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="flags"><a class="header" href="#flags">Flags</a></h1>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: center">N/A</th><th style="text-align: center">LT</th><th style="text-align: center">GT</th><th style="text-align: center">Carry</th><th style="text-align: center">Interrupt</th><th style="text-align: center">Negative</th><th style="text-align: center">Overflow</th><th style="text-align: center">Zero</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: center">N/A</th><th style="text-align: center">LT</th><th style="text-align: center">GT</th><th style="text-align: center">N/A</th><th style="text-align: center">N/A</th><th style="text-align: center">N/A</th><th style="text-align: center">Overflow</th><th style="text-align: center">Equal</th></tr></thead><tbody>
 </tbody></table>
 </div>
 <p>These flags get set with the <code>CMP</code> instruction, excluding the overflow flag. Overflow gets set when a register overflows due to a overflow using the <code>ADD</code> or <code>SUB</code> instructions.</p>

@@ -70,10 +70,12 @@
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
             var html = document.querySelector('html');
-            var sidebar = 'hidden';
+            var sidebar = null;
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
             }
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
@@ -161,7 +163,7 @@
 <h2 id="missing-features"><a class="header" href="#missing-features">Missing features</a></h2>
 <p>Currently, the CPU is pretty limited. Features such as, but not limiting to:</p>
 <ul>
-<li><input disabled="" type="checkbox"/>
+<li><input disabled="" type="checkbox" checked=""/>
 Jumping to and returning from subroutines (Saving return address on stack).</li>
 <li><input disabled="" type="checkbox"/>
 Bitwise operations</li>

@@ -70,10 +70,12 @@
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
             var html = document.querySelector('html');
-            var sidebar = 'hidden';
+            var sidebar = null;
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
             }
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
@@ -146,12 +148,12 @@
 <p>The opcode table for the current design.</p>
 <p>V = Value | R = Register | A = Address | L = Label (Address)</p>
 <div class="table-wrapper"><table><thead><tr><th></th><th>0x0</th><th>0x1</th><th>0x2</th><th>0x3</th><th>0x4</th><th>0x5</th><th>0x6</th><th>0x7</th><th>0x8</th><th>0x9</th><th>0xA</th><th>0xB</th><th>0xC</th><th>0xD</th><th>0xE</th><th>0xF</th></tr></thead><tbody>
-<tr><td>0x0</td><td>00<br/>LD V</td><td>01<br/>LD R</td><td>02<br/>LD A</td><td>03<br/>PSH V</td><td>04<br/>PSH R</td><td>05<br/>PSH A</td><td>06<br/>POP R</td><td>07<br/>POP</td><td>08<sup class="footnote-reference"><a href="#1">1</a></sup><br/>LDS A</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x0</td><td>00<br/>MOV V</td><td>01<br/>LD R</td><td>02<br/>LD A</td><td>03<br/>PSH V</td><td>04<br/>PSH R</td><td>05<br/>PSH A</td><td>06<br/>POP R</td><td>07<br/>POP</td><td>08<sup class="footnote-reference"><a href="#1">1</a></sup><br/>LDS A</td><td>09<br/>MOV R</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x1</td><td>10<br/>ST A</td><td>11<br/>STL A</td><td>12<br/>STH A</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x2</td><td>20<br/>CMP R</td><td>21<br/>CMP V</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x3</td><td>30<br/>BEQ L</td><td>31<br/>BGT L</td><td>32<br/>BLT L</td><td>33<br/>JMP L</td><td>34<br/>BOF R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x4</td><td>40<br/>ADD V</td><td>41<br/>SUB V</td><td>42<br/>ADD R</td><td>43<br/>SUB R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x5</td><td>50<br/>CALL L</td><td>51<br/>RET</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x6</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x7</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x8</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
