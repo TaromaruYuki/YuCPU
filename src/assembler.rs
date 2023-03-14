@@ -458,12 +458,24 @@ impl Assembler {
         }
     }
 
-    fn inst_mov(_labels: &AssemblerLabels, token: &Token) -> Instruction {
+    fn inst_mov(labels: &AssemblerLabels, token: &Token) -> Instruction {
         let reg = Assembler::is_valid_register(token.args[0].clone());
+        let test_regex = Regex::new(r"^\d+$").unwrap();
+
         if &token.args[1][..1] == "R" {
             let reg2 = Assembler::is_valid_register(token.args[1].clone());
 
             Instruction::new_u8(0x09, reg, 0x00, reg2)
+        } else if !&token.args[1].starts_with("0x")
+            && test_regex.replace(&token.args[1].clone(), "") != ""
+        {
+            let found_label = Assembler::find_label(token.args[1].clone(), labels);
+
+            if found_label.l_type == LabelType::None {
+                panic!("Label \"{}\" does not exist!", token.args[1]);
+            }
+
+            Instruction::new(0x0A, reg, found_label.addr)
         } else {
             let val = Assembler::get_value_from_str(token.args[1].clone());
 

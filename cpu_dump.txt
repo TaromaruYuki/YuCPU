@@ -1,17 +1,17 @@
-Program Counter: 0xDB0E
+Program Counter: 0xDACB
 Stack Pointer: 0x0000
 Base Pointer: 0x0000
 
 Register:
-    R1: 0x8
-    R2: 0x8
-    R3: 0x23
-    R4: 0x0
-    R5: 0x0
-    R6: 0x0
+    R1: 0xDAC1
+    R2: 0x0000
+    R3: 0x0000
+    R4: 0x0000
+    R5: 0x0000
+    R6: 0x0000
 
 Flags:
-    Zero: 1
+    Zero: 0
     GT  : 0
     LT  : 0
     OvrF: 0

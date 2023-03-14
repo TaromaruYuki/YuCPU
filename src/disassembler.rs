@@ -83,6 +83,10 @@ impl Disassembler {
                 InstructionInfo::new(String::from("MOV"), InstructionValues::Reg, true),
             ),
             (
+                0x0A,
+                InstructionInfo::new(String::from("MOV"), InstructionValues::Addr, true),
+            ),
+            (
                 0x10,
                 InstructionInfo::new(String::from("ST"), InstructionValues::Addr, true),
             ),

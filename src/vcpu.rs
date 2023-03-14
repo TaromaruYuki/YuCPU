@@ -136,7 +136,8 @@ impl VCPU {
             string += "Register:\n";
 
             for i in 0..6 {
-                string += &format!("    R{}: 0x{}\n", i + 1, *self.decode_register(i as u8));
+                let reg = *self.decode_register(i as u8);
+                string += &format!("    R{}: 0x{}\n", i + 1, reg.to_hex_string());
             }
 
             string += "\nFlags:\n";
@@ -216,6 +217,7 @@ impl VCPU {
         self.inst_map.insert(0x07, VCPU::inst_ins_pop);
         self.inst_map.insert(0x08, VCPU::inst_ld_short);
         self.inst_map.insert(0x09, VCPU::inst_mov_register);
+        self.inst_map.insert(0x0A, VCPU::inst_mov_value); // mov_addr but we don't really do anything with the bus
 
         self.inst_map.insert(0x10, VCPU::inst_st_address);
         self.inst_map.insert(0x11, VCPU::inst_stl_address);
@@ -257,12 +259,6 @@ impl VCPU {
     fn inst_ld_register(&mut self, instruction: &Instruction) {
         let addr = *self.decode_register(instruction.data as u8);
 
-        println!(
-            "Loading register {} with addr {}",
-            instruction.register, addr
-        );
-        println!("Value of addr is {}", self.data_bus.read_short_panic(addr));
-
         *self.decode_register(instruction.register) = self.data_bus.read_short_panic(addr);
         self.advance();
     }
@@ -285,11 +281,6 @@ impl VCPU {
     }
 
     fn inst_psh_address(&mut self, instruction: &Instruction) {
-        println!(
-            "Reading address {}. Value: {}.",
-            instruction.data.to_hex_string(),
-            self.data_bus.read_panic(instruction.data)
-        );
         self.push(&(self.data_bus.read_panic(instruction.data) as u16));
         self.advance();
     }
