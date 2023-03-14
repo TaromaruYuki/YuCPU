@@ -129,7 +129,8 @@ fn main() {
             exit(1);
         }
 
-        let disassembler = disassembler::Disassembler::new(&input_file);
+        let disassembler =
+            disassembler::Disassembler::new(&input_file, args.contains(&String::from("-a")));
 
         disassembler.disassemble();
 

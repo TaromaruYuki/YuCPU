@@ -54,6 +54,7 @@ impl VCPU {
         self.registers.r6 = 0x00;
         self.registers.pc = 0xDAC1;
         self.registers.sp = 0x00;
+        self.registers.bp = 0x00;
         self.registers.flags = 0x00;
     }
 
@@ -83,6 +84,7 @@ impl VCPU {
             let data_2 = self.data_bus.read_panic(self.registers.pc + 3);
 
             let instruction = Instruction::new_u8(opcode, register, data_1, data_2);
+            // println!("Instruction: {:#?}", instruction);
             self.decode(instruction);
         }
     }
@@ -110,6 +112,7 @@ impl VCPU {
             5 => &mut self.registers.r6,
             6 => &mut self.registers.pc,
             7 => &mut self.registers.sp,
+            8 => &mut self.registers.bp,
             _ => panic!("Invalid register"),
         };
     }
@@ -128,7 +131,8 @@ impl VCPU {
         if dump_action == DumpAction::File {
             let mut string = format!("Program Counter: 0x{}\n", self.registers.pc.to_hex_string());
 
-            string += &format!("Stack Pointer: 0x{}\n\n", self.registers.sp.to_hex_string());
+            string += &format!("Stack Pointer: 0x{}\n", self.registers.sp.to_hex_string());
+            string += &format!("Base Pointer: 0x{}\n\n", self.registers.bp.to_hex_string());
             string += "Register:\n";
 
             for i in 0..6 {
@@ -190,22 +194,19 @@ impl VCPU {
     }
 
     fn pop(&mut self) -> u16 {
-        let d2 = self.data_bus.read_panic(self.registers.sp - 1);
-        let d1 = self.data_bus.read_panic(self.registers.sp - 2);
-
-        let sp_1 = self.registers.sp - 1;
-        let sp_2 = self.registers.sp - 2;
-
-        self.data_bus.write_panic(sp_1, &0x00);
-        self.data_bus.write_panic(sp_2, &0x00);
-
         self.registers.sp -= 2;
+
+        let d1 = self.data_bus.read_panic(self.registers.sp);
+        let d2 = self.data_bus.read_panic(self.registers.sp + 1);
+
+        self.data_bus.write_panic(self.registers.sp, &0x00);
+        self.data_bus.write_panic(self.registers.sp + 1, &0x00);
 
         ((d1 as u16) << 8) | d2 as u16
     }
 
     fn fill_hashmap(&mut self) {
-        self.inst_map.insert(0x00, VCPU::inst_ld_value);
+        self.inst_map.insert(0x00, VCPU::inst_mov_value);
         self.inst_map.insert(0x01, VCPU::inst_ld_register);
         self.inst_map.insert(0x02, VCPU::inst_ld_address);
         self.inst_map.insert(0x03, VCPU::inst_psh_value);
@@ -214,10 +215,15 @@ impl VCPU {
         self.inst_map.insert(0x06, VCPU::inst_pop_register);
         self.inst_map.insert(0x07, VCPU::inst_ins_pop);
         self.inst_map.insert(0x08, VCPU::inst_ld_short);
+        self.inst_map.insert(0x09, VCPU::inst_mov_register);
 
         self.inst_map.insert(0x10, VCPU::inst_st_address);
         self.inst_map.insert(0x11, VCPU::inst_stl_address);
         self.inst_map.insert(0x12, VCPU::inst_sth_address);
+
+        self.inst_map.insert(0x13, VCPU::inst_st_register);
+        self.inst_map.insert(0x14, VCPU::inst_stl_register);
+        self.inst_map.insert(0x15, VCPU::inst_sth_register);
 
         self.inst_map.insert(0x20, VCPU::inst_cmp_register);
         self.inst_map.insert(0x21, VCPU::inst_cmp_value);
@@ -227,11 +233,15 @@ impl VCPU {
         self.inst_map.insert(0x32, VCPU::inst_blt);
         self.inst_map.insert(0x33, VCPU::inst_jmp);
         self.inst_map.insert(0x34, VCPU::inst_bof);
+        self.inst_map.insert(0x35, VCPU::inst_bne);
 
         self.inst_map.insert(0x40, VCPU::inst_add_value);
         self.inst_map.insert(0x41, VCPU::inst_sub_value);
         self.inst_map.insert(0x42, VCPU::inst_add_register);
         self.inst_map.insert(0x43, VCPU::inst_sub_register);
+
+        self.inst_map.insert(0x50, VCPU::inst_call);
+        self.inst_map.insert(0x51, VCPU::inst_ret);
 
         self.inst_map.insert(0xFE, VCPU::inst_hlt);
         self.inst_map.insert(0xFF, VCPU::inst_nop);
@@ -239,13 +249,21 @@ impl VCPU {
 
     // !!! Instructions
 
-    fn inst_ld_value(&mut self, instruction: &Instruction) {
+    fn inst_mov_value(&mut self, instruction: &Instruction) {
         *self.decode_register(instruction.register) = instruction.data;
         self.advance();
     }
 
     fn inst_ld_register(&mut self, instruction: &Instruction) {
-        *self.decode_register(instruction.register) = *self.decode_register(instruction.data as u8);
+        let addr = *self.decode_register(instruction.data as u8);
+
+        println!(
+            "Loading register {} with addr {}",
+            instruction.register, addr
+        );
+        println!("Value of addr is {}", self.data_bus.read_short_panic(addr));
+
+        *self.decode_register(instruction.register) = self.data_bus.read_short_panic(addr);
         self.advance();
     }
 
@@ -293,8 +311,12 @@ impl VCPU {
         self.advance();
     }
 
+    fn inst_mov_register(&mut self, instruction: &Instruction) {
+        *self.decode_register(instruction.register) = *self.decode_register(instruction.data as u8);
+        self.advance();
+    }
+
     fn inst_st_address(&mut self, instruction: &Instruction) {
-        // TODO: This is being stored in memory as zero...
         let r = self.decode_register(instruction.register);
         let v1 = (*r >> 8_u16) as u8;
         let v2 = (*r & 0xFF_u16) as u8;
@@ -314,6 +336,35 @@ impl VCPU {
     fn inst_sth_address(&mut self, instruction: &Instruction) {
         let value = (*self.decode_register(instruction.register) >> 8) as u8;
         self.data_bus.write_panic(instruction.data, &value);
+        self.advance();
+    }
+
+    fn inst_st_register(&mut self, instruction: &Instruction) {
+        let r = self.decode_register(instruction.register);
+        let v1 = (*r >> 8_u16) as u8;
+        let v2 = (*r & 0xFF_u16) as u8;
+
+        let r2 = *self.decode_register(instruction.data as u8);
+
+        // CPU is big endian, so store the high byte first
+        self.data_bus.write_panic(r2, &v1);
+        self.data_bus.write_panic(r2 + 1, &v2);
+        self.advance();
+    }
+
+    fn inst_stl_register(&mut self, instruction: &Instruction) {
+        let value = *self.decode_register(instruction.register) as u8;
+        let reg = *self.decode_register(instruction.data as u8);
+
+        self.data_bus.write_panic(reg, &value);
+        self.advance();
+    }
+
+    fn inst_sth_register(&mut self, instruction: &Instruction) {
+        let value = (*self.decode_register(instruction.register) >> 8) as u8;
+        let reg = *self.decode_register(instruction.data as u8);
+
+        self.data_bus.write_panic(reg, &value);
         self.advance();
     }
 
@@ -368,6 +419,14 @@ impl VCPU {
         }
     }
 
+    fn inst_bne(&mut self, instruction: &Instruction) {
+        if self.registers.flags & (1 << 0) == 0 {
+            self.registers.pc = instruction.data;
+        } else {
+            self.advance();
+        }
+    }
+
     fn inst_add_value(&mut self, instruction: &Instruction) {
         let val = (*self.decode_register(instruction.register)) + instruction.data;
         *self.decode_register(instruction.register) = val;
@@ -392,6 +451,16 @@ impl VCPU {
             - *self.decode_register(instruction.data as u8);
         *self.decode_register(instruction.register) = val;
         self.advance();
+    }
+
+    fn inst_call(&mut self, instruction: &Instruction) {
+        self.push(&(self.registers.pc + 4));
+        self.inst_jmp(instruction);
+    }
+
+    fn inst_ret(&mut self, _instruction: &Instruction) {
+        let addr = self.pop();
+        self.registers.pc = addr;
     }
 
     fn inst_hlt(&mut self, _instruction: &Instruction) {

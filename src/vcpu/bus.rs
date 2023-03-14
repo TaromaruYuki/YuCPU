@@ -19,6 +19,7 @@ pub enum DataBusError {
 }
 
 type DataBusResult = Result<Option<u8>, DataBusError>;
+type DataBusShortResult = Result<Option<u16>, DataBusError>;
 
 #[derive(Clone)]
 pub struct DataBus {
@@ -44,6 +45,26 @@ impl DataBus {
 
     pub fn read_panic(&self, addr: u16) -> u8 {
         match self.read(addr) {
+            Ok(val) => val.unwrap(),
+            Err(_) => {
+                panic!("Address out of range")
+            }
+        }
+    }
+
+    pub fn read_short(&self, addr: u16) -> DataBusShortResult {
+        if addr > 0xFFDD {
+            return Err(DataBusError::OutOfRange);
+        }
+
+        let data_1 = self.memory[addr as usize];
+        let data_2 = self.memory[(addr + 1) as usize];
+
+        Ok(Some(((data_1 as u16) << 8) | data_2 as u16))
+    }
+
+    pub fn read_short_panic(&self, addr: u16) -> u16 {
+        match self.read_short(addr) {
             Ok(val) => val.unwrap(),
             Err(_) => {
                 panic!("Address out of range")

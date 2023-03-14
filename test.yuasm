@@ -1,24 +1,33 @@
 .main start
 
-.data
-
-@str1:
-	DAT "String"
-
 .text
 
 @start:
-	LD R1, 0
-	JMP count5
-
-@count5:
-	PSH R1
-	ADD R1, 1
-
-	CMP R1, 5
-	BEQ end
-
-	JMP count5
-
-@end:
+	PSH 8
+	CALL count_to_x
+	POP
 	HLT
+
+@count_to_x:
+	PSH RBP
+	MOV RBP, RSP
+
+	SUB RBP, 6
+	LD R1, RBP
+	ADD RBP 6
+
+	MOV R2, 1
+	MOV R3, 0x10
+
+@count_to_x_loop:
+	STL R2, R3
+	ADD R2, 1
+	ADD R3, 1
+
+	CMP R2, R1
+	BNE count_to_x_loop
+
+	STL R2, R3
+
+	POP RBP
+	RET

@@ -1,9 +1,4 @@
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::{Read, Seek, SeekFrom},
-    path::Path,
-};
+use std::{collections::HashMap, fs::File, io::Read, path::Path};
 
 use colored::Colorize;
 
@@ -39,16 +34,17 @@ impl InstructionInfo {
 pub struct Disassembler {
     file_in: Box<Path>,
     instruction_names: HashMap<u8, InstructionInfo>,
+    use_addr: bool,
 }
 
 impl Disassembler {
-    pub fn new(file_in: &String) -> Disassembler {
+    pub fn new(file_in: &String, use_addr: bool) -> Disassembler {
         let file_in_path: &Path = Path::new(file_in);
 
         let instruction_names: HashMap<u8, InstructionInfo> = HashMap::from([
             (
                 0x00,
-                InstructionInfo::new(String::from("LD"), InstructionValues::Val, true),
+                InstructionInfo::new(String::from("MOV"), InstructionValues::Val, true),
             ),
             (
                 0x01,
@@ -81,6 +77,10 @@ impl Disassembler {
             (
                 0x08,
                 InstructionInfo::new(String::from("LDS"), InstructionValues::Addr, true),
+            ),
+            (
+                0x09,
+                InstructionInfo::new(String::from("MOV"), InstructionValues::Reg, true),
             ),
             (
                 0x10,
@@ -123,6 +123,10 @@ impl Disassembler {
                 InstructionInfo::new(String::from("BOF"), InstructionValues::Addr, false),
             ),
             (
+                0x35,
+                InstructionInfo::new(String::from("BNE"), InstructionValues::Addr, false),
+            ),
+            (
                 0x40,
                 InstructionInfo::new(String::from("ADD"), InstructionValues::Val, true),
             ),
@@ -139,6 +143,14 @@ impl Disassembler {
                 InstructionInfo::new(String::from("SUB"), InstructionValues::Reg, true),
             ),
             (
+                0x50,
+                InstructionInfo::new(String::from("CALL"), InstructionValues::Addr, false),
+            ),
+            (
+                0x51,
+                InstructionInfo::new(String::from("RET"), InstructionValues::Null, false),
+            ),
+            (
                 0xFE,
                 InstructionInfo::new(String::from("HLT"), InstructionValues::Null, false),
             ),
@@ -151,6 +163,7 @@ impl Disassembler {
         Disassembler {
             file_in: Into::into(file_in_path),
             instruction_names,
+            use_addr,
         }
     }
 
@@ -176,17 +189,6 @@ impl Disassembler {
         if n != 2 {
             panic!("Reading program offset resulted in non 2 length read. Make sure file \"{}\" is not empty or came from the YuCPU compiler!", file_in.display());
         }
-
-        match file.seek(SeekFrom::Start(
-            (((buffer[0] as u16) << 8) | buffer[1] as u16) as u64,
-        )) {
-            Err(why) => panic!(
-                "Offsetting file \"{}\" failed!\n\n{}",
-                file_in.display(),
-                why
-            ),
-            Ok(n) => n,
-        };
 
         loop {
             let mut buffer = [0; 4];
@@ -222,24 +224,63 @@ impl Disassembler {
         res
     }
 
+    fn reg_to_string(reg: u8) -> String {
+        if reg == 0 || reg <= 5 {
+            format!("{}{}", "R".magenta(), reg + 1)
+        } else if reg == 6 {
+            format!("{}", "RPC".magenta())
+        } else if reg == 7 {
+            format!("{}", "RSP".magenta())
+        } else if reg == 8 {
+            format!("{}", "RBP".magenta())
+        } else {
+            panic!("Invalid register.");
+        }
+    }
+
     pub fn disassemble(self) {
         let instructions = Disassembler::get_instructions(&self.file_in);
 
+        let header_padding: &str = if self.use_addr {
+            "            "
+        } else {
+            "         "
+        };
+
         let mut res = format!(
-            "Disassembly of file {}:\n\n        Source        Assembly\n",
-            &self.file_in.display()
+            "Disassembly of file {}:\n\n{}Source        Assembly\n",
+            &self.file_in.display(),
+            header_padding
         );
 
-        for (i, instruction) in instructions.iter().enumerate() {
+        let mut counter: u16 = 0;
+
+        for instruction in instructions {
+            let disp_addr: String;
+            let counter_padd: u16;
+
+            if self.use_addr {
+                disp_addr = (0xDAC1 + counter).to_hex_string();
+                counter_padd = 0;
+            } else {
+                disp_addr = format!("{}", counter);
+                counter_padd = counter + 1;
+            }
+
             let instruction_info = self.instruction_names[&instruction.opcode].clone();
 
             let source_hex = Disassembler::source_to_hex_str(&instruction.source);
             let source_padding =
-                " ".repeat((16 - source_hex.len()) - ((i + 1) as u16).to_string().len());
+                " ".repeat((16 - source_hex.len()) - (counter_padd).to_string().len());
 
-            res += &format!("{}{}{}      ", i + 1, source_padding, source_hex.yellow());
+            res += &format!(
+                "{}{}{}      ",
+                disp_addr,
+                source_padding,
+                source_hex.yellow()
+            );
 
-            let inst_padding = " ".repeat(4 - instruction_info.name.len());
+            let inst_padding = " ".repeat(5 - instruction_info.name.len());
 
             if !instruction_info.uses_reg1 && instruction_info.value == InstructionValues::Null {
                 res += &format!("{}", instruction_info.name.cyan());
@@ -248,22 +289,27 @@ impl Disassembler {
             }
 
             if instruction_info.uses_reg1 {
-                res += &format!(
-                    "{}{}, ",
-                    "R".magenta(),
-                    instruction.register.to_string().magenta()
-                );
+                res += &format!("{}, ", Disassembler::reg_to_string(instruction.register));
             }
 
             if instruction_info.value == InstructionValues::Val {
-                res += &format!("{}", instruction.data.to_hex_string().yellow());
+                res += &format!(
+                    "{}{}",
+                    "0x".yellow(),
+                    instruction.data.to_hex_string().yellow()
+                );
             } else if instruction_info.value == InstructionValues::Addr {
-                res += &format!("{}", instruction.data.to_hex_string().red().red());
+                res += &format!(
+                    "{}{}",
+                    "$0x".red(),
+                    instruction.data.to_hex_string().red().red()
+                );
             } else if instruction_info.value == InstructionValues::Reg {
-                res += &format!("{}", &instruction.data.to_hex_string().magenta());
+                res += &Disassembler::reg_to_string(instruction.data as u8);
             }
 
             res += "\n";
+            counter += 4;
         }
 
         println!("{}", res);
