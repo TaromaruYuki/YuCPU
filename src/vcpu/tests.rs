@@ -43,7 +43,7 @@ fn test_bus_mem_copy() {
 }
 
 #[test]
-fn cpu_ld_value() {
+fn cpu_mov_value() {
     let mut cpu = VCPU::new();
 
     cpu.load_program(vec![0xDA, 0xC1, 0x00, 0x00, 0x00, 0x05]);
@@ -55,10 +55,10 @@ fn cpu_ld_value() {
 }
 
 #[test]
-fn cpu_ld_register() {
+fn cpu_mov_register() {
     let mut cpu = VCPU::new();
 
-    cpu.load_program(vec![0xDA, 0xC1, 0x01, 0x00, 0x00, 0x01]);
+    cpu.load_program(vec![0xDA, 0xC1, 0x09, 0x00, 0x00, 0x01]);
 
     cpu.registers.r2 = 0x10;
 
@@ -67,6 +67,23 @@ fn cpu_ld_register() {
     let dump = cpu.dump_cpu(super::DumpAction::Struct).unwrap();
 
     assert_eq!(dump.registers.r1, 0x10);
+}
+
+#[test]
+fn cpu_ld_register() {
+    let mut cpu = VCPU::new();
+
+    cpu.load_program(vec![0xDA, 0xC1, 0x01, 0x00, 0x00, 0x01]);
+
+    cpu.data_bus.memory[0x10] = 0x00;
+    cpu.data_bus.memory[0x11] = 0x50;
+    cpu.registers.r2 = 0x10;
+
+    cpu.run();
+
+    let dump = cpu.dump_cpu(super::DumpAction::Struct).unwrap();
+
+    assert_eq!(dump.registers.r1, 0x50);
 }
 
 #[test]
@@ -436,6 +453,40 @@ fn cpu_blt_no_branch() {
     let dump = cpu.dump_cpu(super::DumpAction::Struct).unwrap();
 
     assert_eq!(dump.registers.pc, 0xDACA);
+}
+
+#[test]
+fn cpu_bne_branches() {
+    let mut cpu = VCPU::new();
+
+    cpu.load_program(vec![
+        0xDA, 0xC1, 0x35, 0x00, 0xDA, 0xC5, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFE, 0xFF, 0xFF,
+    ]);
+
+    cpu.registers.flags = 0b0000_0000;
+
+    cpu.run();
+
+    let dump = cpu.dump_cpu(super::DumpAction::Struct).unwrap();
+
+    assert_eq!(dump.registers.pc, 0xDACE);
+}
+
+#[test]
+fn cpu_bne_no_branch() {
+    let mut cpu = VCPU::new();
+
+    cpu.load_program(vec![
+        0xDA, 0xC1, 0x35, 0x00, 0xDA, 0xC9, 0xFE, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    ]);
+
+    cpu.registers.flags = 0b0000_0001;
+
+    cpu.run();
+
+    let dump = cpu.dump_cpu(super::DumpAction::Struct).unwrap();
+
+    assert_eq!(dump.registers.pc, 0xDACE);
 }
 
 #[test]
