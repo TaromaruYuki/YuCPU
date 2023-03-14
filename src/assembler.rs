@@ -289,7 +289,7 @@ impl Assembler {
 
         let reg_num: u8 = reg[1..2].parse::<u8>().unwrap();
 
-        if reg_num > 6 {
+        if reg_num == 0 || reg_num > 6 {
             panic!("Register {} out of range", reg);
         }
 
