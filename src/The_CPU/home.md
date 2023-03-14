@@ -27,7 +27,7 @@ Memory gets cleared, then the program loads. The CPU then finally starts running
 
 Currently, the CPU is pretty limited. Features such as, but not limiting to:
 
-- [ ] Jumping to and returning from subroutines (Saving return address on stack).
+- [x] Jumping to and returning from subroutines (Saving return address on stack).
 - [ ] Bitwise operations
 - [ ] Getting address of label as value.
 - [ ] Clearing flag(s)
