@@ -101,7 +101,7 @@ impl VCPU {
         }
     }
 
-    #[allow(unused_variables)]
+    #[allow(unused_variables, clippy::needless_return)]
     fn decode_register(&mut self, reg: u8) -> &mut u16 {
         return match reg {
             0 => &mut self.registers.r1,
