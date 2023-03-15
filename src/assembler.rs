@@ -72,6 +72,8 @@ impl Assembler {
 
         self.inst_map.insert(String::from("LD"), Assembler::inst_ld);
         self.inst_map
+            .insert(String::from("MOV"), Assembler::inst_mov);
+        self.inst_map
             .insert(String::from("PSH"), Assembler::inst_psh);
         self.inst_map
             .insert(String::from("POP"), Assembler::inst_pop);
@@ -95,9 +97,15 @@ impl Assembler {
         self.inst_map
             .insert(String::from("BOF"), Assembler::inst_bof);
         self.inst_map
+            .insert(String::from("BNE"), Assembler::inst_bne);
+        self.inst_map
             .insert(String::from("ADD"), Assembler::inst_add);
         self.inst_map
             .insert(String::from("SUB"), Assembler::inst_sub);
+        self.inst_map
+            .insert(String::from("CALL"), Assembler::inst_call);
+        self.inst_map
+            .insert(String::from("RET"), Assembler::inst_ret);
         self.inst_map
             .insert(String::from("HLT"), Assembler::inst_hlt);
         self.inst_map
@@ -267,10 +275,12 @@ impl Assembler {
     }
 
     fn is_valid_register(reg: String) -> u8 {
-        if reg == "PC" {
+        if reg == "RPC" {
             return 0x6;
-        } else if reg == "SP" {
+        } else if reg == "RSP" {
             return 0x7;
+        } else if reg == "RBP" {
+            return 0x8;
         }
 
         if &reg[..1] != "R" {
@@ -279,11 +289,11 @@ impl Assembler {
 
         let reg_num: u8 = reg[1..2].parse::<u8>().unwrap();
 
-        if reg_num > 6 {
+        if reg_num == 0 || reg_num > 6 {
             panic!("Register {} out of range", reg);
         }
 
-        reg_num
+        reg_num - 1
     }
 
     fn parse_labels(&self, data_tokens: &Vec<Token>, text_tokens: &Vec<Token>) -> AssemblerLabels {
@@ -444,9 +454,32 @@ impl Assembler {
 
             Instruction::new(0x02, reg, found_label.addr)
         } else {
-            let addr = Assembler::get_value_from_str(token.args[1].clone());
+            panic!("LD takes in a address, label, or register.");
+        }
+    }
 
-            Instruction::new(0x00, reg, addr)
+    fn inst_mov(labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let reg = Assembler::is_valid_register(token.args[0].clone());
+        let test_regex = Regex::new(r"^\d+$").unwrap();
+
+        if &token.args[1][..1] == "R" {
+            let reg2 = Assembler::is_valid_register(token.args[1].clone());
+
+            Instruction::new_u8(0x09, reg, 0x00, reg2)
+        } else if !&token.args[1].starts_with("0x")
+            && test_regex.replace(&token.args[1].clone(), "") != ""
+        {
+            let found_label = Assembler::find_label(token.args[1].clone(), labels);
+
+            if found_label.l_type == LabelType::None {
+                panic!("Label \"{}\" does not exist!", token.args[1]);
+            }
+
+            Instruction::new(0x0A, reg, found_label.addr)
+        } else {
+            let val = Assembler::get_value_from_str(token.args[1].clone());
+
+            Instruction::new(0x00, reg, val)
         }
     }
 
@@ -602,6 +635,16 @@ impl Assembler {
         }
     }
 
+    fn inst_bne(labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let found_label = Assembler::find_label(token.args[0].clone(), labels);
+
+        if found_label.l_type != LabelType::None {
+            Instruction::new(0x35, 0x00, found_label.addr)
+        } else {
+            panic!("Label {} is undefined", token.args[0]);
+        }
+    }
+
     fn inst_add(_labels: &AssemblerLabels, token: &Token) -> Instruction {
         let reg = Assembler::is_valid_register(token.args[0].clone());
 
@@ -628,6 +671,20 @@ impl Assembler {
 
             Instruction::new(0x41, reg, addr)
         }
+    }
+
+    fn inst_call(labels: &AssemblerLabels, token: &Token) -> Instruction {
+        let found_label = Assembler::find_label(token.args[0].clone(), labels);
+
+        if found_label.l_type != LabelType::None {
+            Instruction::new(0x50, 0x00, found_label.addr)
+        } else {
+            panic!("Label {} is undefined", token.args[0]);
+        }
+    }
+
+    fn inst_ret(_labels: &AssemblerLabels, _token: &Token) -> Instruction {
+        Instruction::new(0x51, 0x00, 0x0000)
     }
 
     fn inst_hlt(_labels: &AssemblerLabels, _token: &Token) -> Instruction {

@@ -9,6 +9,7 @@ pub struct Registers {
     pub flags: u8,
     pub pc: u16,
     pub sp: u16,
+    pub bp: u16,
 }
 
 impl Registers {
@@ -23,6 +24,7 @@ impl Registers {
             flags: 0x00,
             pc: 0x0000,
             sp: 0x0000,
+            bp: 0x0000,
         }
     }
 }

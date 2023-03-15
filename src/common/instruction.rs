@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Instruction {
     pub opcode: u8,
     pub register: u8,

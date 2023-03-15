@@ -3,22 +3,9 @@
 .data
 
 @str1:
-	DAT "String"
+	DAT "Hello"
 
 .text
 
 @start:
-	LD R1, 0
-	JMP count5
-
-@count5:
-	PSH R1
-	ADD R1, 1
-
-	CMP R1, 5
-	BEQ end
-
-	JMP count5
-
-@end:
-	HLT
+	MOV R1, str1

@@ -3,14 +3,44 @@ use super::Assembler;
 // region: instructions
 
 #[test]
-fn test_instruction_ld_v_hex() {
+fn test_instruction_mov_v_hex() {
     let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x00, 0x00, 0xDE, 0xAD]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
         String::from(".text"),
         String::from("@start:"),
-        String::from("\tLD R0, 0xDEAD"),
+        String::from("\tMOV R1, 0xDEAD"),
+    ]));
+
+    let bytes = assembler.assemble();
+    assert_eq!(bytes.0, expected_bytes);
+}
+
+#[test]
+fn test_instruction_mov_v() {
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x00, 0x00, 0x01, 0xF4]);
+
+    let assembler = Assembler::new_lines(Vec::from([
+        String::from(".main start"),
+        String::from(".text"),
+        String::from("@start:"),
+        String::from("\tMOV R1, 500"),
+    ]));
+
+    let bytes = assembler.assemble();
+    assert_eq!(bytes.0, expected_bytes);
+}
+
+#[test]
+fn test_instruction_mov_r() {
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x09, 0x00, 0x00, 0x01]);
+
+    let assembler = Assembler::new_lines(Vec::from([
+        String::from(".main start"),
+        String::from(".text"),
+        String::from("@start:"),
+        String::from("\tMOV R1, R2"),
     ]));
 
     let bytes = assembler.assemble();
@@ -19,13 +49,13 @@ fn test_instruction_ld_v_hex() {
 
 #[test]
 fn test_instruction_ld_r() {
-    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x01, 0x00, 0x00, 0x01]);
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x01, 0x00, 0x00, 0x00]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
         String::from(".text"),
         String::from("@start:"),
-        String::from("\tLD R0, R1"),
+        String::from("\tLD R1, R1"),
     ]));
 
     let bytes = assembler.assemble();
@@ -35,7 +65,7 @@ fn test_instruction_ld_r() {
 
 #[test]
 fn test_instruction_ld_a_hex() {
-    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x02, 0x02, 0x00, 0x50]);
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x02, 0x01, 0x00, 0x50]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
@@ -65,7 +95,7 @@ fn test_instruction_psh_v() {
 
 #[test]
 fn test_instruction_psh_r() {
-    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x04, 0x06, 0x00, 0x00]);
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x04, 0x05, 0x00, 0x00]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
@@ -95,7 +125,7 @@ fn test_instruction_psh_a() {
 
 #[test]
 fn test_instruction_pop_r() {
-    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x06, 0x02, 0x00, 0x00]);
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x06, 0x01, 0x00, 0x00]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
@@ -125,7 +155,7 @@ fn test_instruction_pop() {
 
 #[test]
 fn test_instruction_lds_a() {
-    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x08, 0x01, 0xBE, 0xEF]);
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x08, 0x00, 0xBE, 0xEF]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
@@ -146,7 +176,7 @@ fn test_instruction_st_a() {
         String::from(".main start"),
         String::from(".text"),
         String::from("@start:"),
-        String::from("\tST R0, $0xBEEF"),
+        String::from("\tST R1, $0xBEEF"),
     ]));
 
     let bytes = assembler.assemble();
@@ -155,7 +185,7 @@ fn test_instruction_st_a() {
 
 #[test]
 fn test_instruction_stl_a() {
-    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x11, 0x03, 0x06, 0x17]);
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x11, 0x02, 0x06, 0x17]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
@@ -170,7 +200,7 @@ fn test_instruction_stl_a() {
 
 #[test]
 fn test_instruction_sth_a() {
-    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x12, 0x04, 0x0D, 0x06]);
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x12, 0x03, 0x0D, 0x06]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
@@ -185,13 +215,13 @@ fn test_instruction_sth_a() {
 
 #[test]
 fn test_instruction_cmp_r() {
-    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x20, 0x00, 0x00, 0x01]);
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x20, 0x00, 0x00, 0x00]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
         String::from(".text"),
         String::from("@start:"),
-        String::from("\tCMP R0, R1"),
+        String::from("\tCMP R1, R1"),
     ]));
 
     let bytes = assembler.assemble();
@@ -206,7 +236,7 @@ fn test_instruction_cmp_v() {
         String::from(".main start"),
         String::from(".text"),
         String::from("@start:"),
-        String::from("\tCMP R0, 0xCA7"), // >:(
+        String::from("\tCMP R1, 0xCA7"), // >:(
     ]));
 
     let bytes = assembler.assemble();
@@ -289,6 +319,21 @@ fn test_instruction_bof_l() {
 }
 
 #[test]
+fn test_instruction_bne_l() {
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x35, 0x00, 0xDA, 0xC1]);
+
+    let assembler = Assembler::new_lines(Vec::from([
+        String::from(".main start"),
+        String::from(".text"),
+        String::from("@start:"),
+        String::from("\tBNE start"),
+    ]));
+
+    let bytes = assembler.assemble();
+    assert_eq!(bytes.0, expected_bytes);
+}
+
+#[test]
 fn test_instruction_add_v() {
     let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x40, 0x00, 0x00, 0x02]);
 
@@ -296,7 +341,7 @@ fn test_instruction_add_v() {
         String::from(".main start"),
         String::from(".text"),
         String::from("@start:"),
-        String::from("\tADD R0, 2"),
+        String::from("\tADD R1, 2"),
     ]));
 
     let bytes = assembler.assemble();
@@ -311,7 +356,7 @@ fn test_instruction_sub_v() {
         String::from(".main start"),
         String::from(".text"),
         String::from("@start:"),
-        String::from("\tSUB R0, 2"),
+        String::from("\tSUB R1, 2"),
     ]));
 
     let bytes = assembler.assemble();
@@ -320,13 +365,13 @@ fn test_instruction_sub_v() {
 
 #[test]
 fn test_instruction_add_r() {
-    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x42, 0x00, 0x00, 0x02]);
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x42, 0x00, 0x00, 0x01]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
         String::from(".text"),
         String::from("@start:"),
-        String::from("\tADD R0, R2"),
+        String::from("\tADD R1, R2"),
     ]));
 
     let bytes = assembler.assemble();
@@ -335,13 +380,43 @@ fn test_instruction_add_r() {
 
 #[test]
 fn test_instruction_sub_r() {
-    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x43, 0x00, 0x00, 0x02]);
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x43, 0x00, 0x00, 0x01]);
 
     let assembler = Assembler::new_lines(Vec::from([
         String::from(".main start"),
         String::from(".text"),
         String::from("@start:"),
-        String::from("\tSUB R0, R2"),
+        String::from("\tSUB R1, R2"),
+    ]));
+
+    let bytes = assembler.assemble();
+    assert_eq!(bytes.0, expected_bytes);
+}
+
+#[test]
+fn test_instruction_call_l() {
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x50, 0x00, 0xDA, 0xC1]);
+
+    let assembler = Assembler::new_lines(Vec::from([
+        String::from(".main start"),
+        String::from(".text"),
+        String::from("@start:"),
+        String::from("\tCALL start"),
+    ]));
+
+    let bytes = assembler.assemble();
+    assert_eq!(bytes.0, expected_bytes);
+}
+
+#[test]
+fn test_instruction_ret() {
+    let expected_bytes: Vec<u8> = Vec::from([0xDA, 0xC1, 0x51, 0x00, 0x00, 0x0]);
+
+    let assembler = Assembler::new_lines(Vec::from([
+        String::from(".main start"),
+        String::from(".text"),
+        String::from("@start:"),
+        String::from("\tRET"),
     ]));
 
     let bytes = assembler.assemble();
@@ -386,7 +461,7 @@ fn test_start_label() {
         String::from(".main start"),
         String::from(".text"),
         String::from("@start:"),
-        String::from("\tLD R0, 16"),
+        String::from("\tMOV R1, 16"),
     ]));
 
     assembler = assembler.assemble().1;
