@@ -19,7 +19,7 @@ YuCPU uses 64kb of memory. [Find out more about the memory layout.](./memory.md)
 
 ## CPU Startup
 
-Register 1 through 6 is initialized at 0x00. Program counter starts at memory address 0xDAC1. Stack pointer starts at address 0x0000. Flag register is initialized at 0x00, clearing all flags.
+Register 1 through 6 is initialized at 0x00. Program counter starts at memory address 0xA000. Stack pointer starts at address 0xE000. Flag register is initialized at 0x00, clearing all flags.
 
 Memory gets cleared, then the program loads. The CPU then finally starts running the program.
 
