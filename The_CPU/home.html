@@ -158,7 +158,7 @@
 </div>
 <p>YuCPU uses 64kb of memory. <a href="./memory.html">Find out more about the memory layout.</a></p>
 <h2 id="cpu-startup"><a class="header" href="#cpu-startup">CPU Startup</a></h2>
-<p>Register 1 through 6 is initialized at 0x00. Program counter starts at memory address 0xDAC1. Stack pointer starts at address 0x0000. Flag register is initialized at 0x00, clearing all flags.</p>
+<p>Register 1 through 6 is initialized at 0x00. Program counter starts at memory address 0xA000. Stack pointer starts at address 0xE000. Flag register is initialized at 0x00, clearing all flags.</p>
 <p>Memory gets cleared, then the program loads. The CPU then finally starts running the program.</p>
 <h2 id="missing-features"><a class="header" href="#missing-features">Missing features</a></h2>
 <p>Currently, the CPU is pretty limited. Features such as, but not limiting to:</p>
