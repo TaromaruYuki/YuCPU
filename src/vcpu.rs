@@ -84,7 +84,6 @@ impl VCPU {
             let data_2 = self.data_bus.read_panic(self.registers.pc + 3);
 
             let instruction = Instruction::new_u8(opcode, register, data_1, data_2);
-            // println!("Instruction: {:#?}", instruction);
             self.decode(instruction);
         }
     }
