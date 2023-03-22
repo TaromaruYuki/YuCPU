@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 bitflags = "2.0.1"
 colored = "2.0.0"
+itertools = "0.10.5"
 regex = "1.7.1"

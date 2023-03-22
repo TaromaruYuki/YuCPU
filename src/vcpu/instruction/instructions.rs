@@ -5,12 +5,18 @@ use crate::vcpu::cpu::CPU;
 pub type InstructionFunction = fn(&mut CPU);
 pub type InstructionInfo = (Opcode, AddressingMode, InstructionFunction);
 
-pub fn mov_immediate(_cpu: &mut CPU) {
-    todo!();
+pub fn mov_immediate(cpu: &mut CPU) {
+    let register: u8 = ((0xE0 & cpu.ir) >> 5) as u8;
+    *cpu.decode_register(register) = cpu.dr;
+    cpu.advance();
 }
-pub fn mov_register(_cpu: &mut CPU) {
-    todo!();
+
+pub fn mov_register(cpu: &mut CPU) {
+    let register: u8 = ((0xE0 & cpu.ir) >> 5) as u8;
+    *cpu.decode_register(register) = *cpu.decode_register(cpu.dr as u8);
+    cpu.advance();
 }
+
 pub fn ld_register(_cpu: &mut CPU) {
     todo!();
 }
