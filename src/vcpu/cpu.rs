@@ -59,6 +59,7 @@ pub struct CPU {
     pub is: u8,
     pub pins: Pins,
     pub map: DeviceMap,
+    pub running: bool,
 }
 
 // Public Code
@@ -82,13 +83,13 @@ impl CPU {
             is: 0,
             pins: Pins::new(),
             map,
+            running: true,
         }
     }
 }
 
 impl CPU {
     pub fn tick(&mut self, mut pins: Pins) -> Pins {
-        println!("Ticking CPU...");
         pins.rw = ReadWrite::Read;
 
         self.ir = match self.map.read(self.pc as u32) {

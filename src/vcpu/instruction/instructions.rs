@@ -509,8 +509,8 @@ pub fn ret(cpu: &mut CPU) {
     cpu.pc = addr;
 }
 
-pub fn hlt(_cpu: &mut CPU) {
-    // The cpu will never advance, which will keep reading the same instruction, thus a infinite loop.
+pub fn hlt(cpu: &mut CPU) {
+    cpu.running = false;
 }
 
 pub fn nop(cpu: &mut CPU) {
