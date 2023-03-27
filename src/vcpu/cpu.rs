@@ -1,5 +1,7 @@
 use bitflags::bitflags;
 
+use crate::vcpu::device::DeviceResponse;
+
 use super::device::map::{DeviceMap, DeviceMapResult};
 use super::instruction::opcode::Instruction;
 
@@ -10,7 +12,8 @@ bitflags! {
         const O = 0b00000010;
         const L = 0b01000000;
         const G = 0b00100000;
-        const FLAGS = Self::Z.bits() | Self::O.bits() | Self::L.bits() | Self::G.bits();
+        const D = 0b10000000;
+        const FLAGS = Self::Z.bits() | Self::O.bits() | Self::L.bits() | Self::G.bits() | Self::G.bits();
     }
 }
 
@@ -52,6 +55,7 @@ pub struct CPU {
     pub flags: Flags,
     pub ir: u16,
     pub dr: u16,
+    pub ad: u8,
     pub is: u8,
     pub pins: Pins,
     pub map: DeviceMap,
@@ -60,7 +64,7 @@ pub struct CPU {
 // Public Code
 impl CPU {
     #[allow(dead_code)]
-    pub fn new(map: DeviceMap) -> CPU {
+    pub fn new(map: DeviceMap, pc: u16) -> CPU {
         CPU {
             r1: 0,
             r2: 0,
@@ -69,11 +73,12 @@ impl CPU {
             r5: 0,
             r6: 0,
             sp: 0,
-            pc: 0x8000,
+            pc,
             bp: 0,
             flags: Flags::empty(),
             ir: 0,
             dr: 0,
+            ad: 0,
             is: 0,
             pins: Pins::new(),
             map,
@@ -83,6 +88,7 @@ impl CPU {
 
 impl CPU {
     pub fn tick(&mut self, mut pins: Pins) -> Pins {
+        println!("Ticking CPU...");
         pins.rw = ReadWrite::Read;
 
         self.ir = match self.map.read(self.pc as u32) {
@@ -90,25 +96,86 @@ impl CPU {
             DeviceMapResult::NoDevices => {
                 panic!("No devices attached. Could not get instruction info.")
             }
+            DeviceMapResult::Error(err) => {
+                if err == DeviceResponse::WriteOnly {
+                    panic!("Device write only. Could not read value.");
+                } else {
+                    panic!("Unknown error. Could not read value.");
+                }
+            }
         };
 
-        if ((0x8 & self.ir) >> 3) == 1 {
-            self.dr = match self.map.read((self.pc + 2) as u32) {
-                DeviceMapResult::Ok(data) => data,
-                DeviceMapResult::NoDevices => {
-                    panic!("No devices attached. Could not get instruction data.")
-                }
-            };
-            self.is = 4;
-        } else {
-            self.dr = match self.map.read_byte((self.pc + 2) as u32) {
-                DeviceMapResult::Ok(data) => data as u16,
-                DeviceMapResult::NoDevices => {
-                    panic!("No devices attached. Could not get instruction data.")
-                }
-            };
-            self.is = 3;
-        }
+        match (0xC & self.ir) >> 2 {
+            0b00 => {
+                self.dr = match self.map.read_byte((self.pc + 2) as u32) {
+                    DeviceMapResult::Ok(data) => data as u16,
+                    DeviceMapResult::NoDevices => {
+                        panic!("No devices attached. Could not get instruction data.")
+                    }
+                    DeviceMapResult::Error(err) => {
+                        if err == DeviceResponse::WriteOnly {
+                            panic!("Device write only. Could not read value.");
+                        } else {
+                            panic!("Unknown error. Could not read value.");
+                        }
+                    }
+                };
+                self.is = 3;
+            }
+            0b01 => {
+                self.dr = match self.map.read((self.pc + 2) as u32) {
+                    DeviceMapResult::Ok(data) => data,
+                    DeviceMapResult::NoDevices => {
+                        panic!("No devices attached. Could not get instruction data.")
+                    }
+                    DeviceMapResult::Error(err) => {
+                        if err == DeviceResponse::WriteOnly {
+                            panic!("Device write only. Could not read value.");
+                        } else {
+                            panic!("Unknown error. Could not read value.");
+                        }
+                    }
+                };
+                self.is = 4;
+            }
+            0b10 => {
+                self.dr = match self.map.read((self.pc + 2) as u32) {
+                    DeviceMapResult::Ok(data) => data,
+                    DeviceMapResult::NoDevices => {
+                        panic!("No devices attached. Could not get instruction data.")
+                    }
+                    DeviceMapResult::Error(err) => {
+                        if err == DeviceResponse::WriteOnly {
+                            panic!("Device write only. Could not read value.");
+                        } else {
+                            panic!("Unknown error. Could not read value.");
+                        }
+                    }
+                };
+
+                self.ad = match self.map.read_byte((self.pc + 4) as u32) {
+                    DeviceMapResult::Ok(data) => data & 0xF,
+                    DeviceMapResult::NoDevices => {
+                        panic!("No devices attached. Could not get instruction data.")
+                    }
+                    DeviceMapResult::Error(err) => {
+                        if err == DeviceResponse::WriteOnly {
+                            panic!("Device write only. Could not read value.");
+                        } else {
+                            panic!("Unknown error. Could not read value.");
+                        }
+                    }
+                };
+
+                self.flags.set(Flags::D, true);
+
+                self.is = 5;
+            }
+            0b11 => {
+                self.is = 2;
+            }
+            _ => panic!("Data match was over 2 bytes..."),
+        };
 
         let mask = 0xFF00;
 
@@ -125,6 +192,7 @@ impl CPU {
             self.dr
         );
 
+        println!("Executing instruction...");
         (res.exec)(self);
 
         self.is = 0;

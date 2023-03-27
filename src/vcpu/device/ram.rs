@@ -25,6 +25,7 @@ impl Device for Ram {
         if addr >= self.start && addr <= self.end {
             let data1 = (self.memory[self.relative(addr)] as u16) << 8;
             let data2 = self.memory[self.relative(addr + 1)] as u16;
+
             return DeviceResponse::Ok(data1 | data2);
         }
 
@@ -39,7 +40,7 @@ impl Device for Ram {
         DeviceResponse::NotMyAddress
     }
 
-    fn write(&mut self, addr: u32, value: u16) -> DeviceResponse<u16> {
+    fn write(&mut self, addr: u32, value: u16) -> DeviceResponse<()> {
         if addr >= self.start && addr <= self.end {
             let val1 = (value >> 8) as u8;
             let val2 = value as u8;
@@ -49,13 +50,28 @@ impl Device for Ram {
             self.memory[addr1] = val1;
             self.memory[addr2] = val2;
 
-            return DeviceResponse::Ok(value);
+            return DeviceResponse::Ok(());
+        }
+
+        DeviceResponse::NotMyAddress
+    }
+
+    fn write_byte(&mut self, addr: u32, value: u8) -> DeviceResponse<()> {
+        if addr >= self.start && addr <= self.end {
+            let addr = self.relative(addr);
+            self.memory[addr] = value;
+
+            return DeviceResponse::Ok(());
         }
 
         DeviceResponse::NotMyAddress
     }
 
     fn get_name(&self) -> String {
-        String::from("Ram")
+        String::from("RAM")
+    }
+
+    fn get_memory(&self) -> &Vec<u8> {
+        &self.memory
     }
 }

@@ -10,7 +10,7 @@ impl Rom {
     pub fn new(memory: Vec<u8>, start: u32) -> Rom {
         Rom {
             start,
-            end: (memory.len() as u32) + start,
+            end: (memory.len() as u32) + start - 1,
             memory,
         }
     }
@@ -39,23 +39,27 @@ impl Device for Rom {
         DeviceResponse::NotMyAddress
     }
 
-    fn write(&mut self, addr: u32, value: u16) -> DeviceResponse<u16> {
+    fn write(&mut self, addr: u32, _value: u16) -> DeviceResponse<()> {
         if addr >= self.start && addr <= self.end {
-            let val1 = (value >> 8) as u8;
-            let val2 = value as u8;
-            let addr1 = self.relative(addr);
-            let addr2 = self.relative(addr + 1);
+            return DeviceResponse::ReadOnly;
+        }
 
-            self.memory[addr1] = val1;
-            self.memory[addr2] = val2;
+        DeviceResponse::NotMyAddress
+    }
 
-            return DeviceResponse::Ok(value);
+    fn write_byte(&mut self, addr: u32, _value: u8) -> DeviceResponse<()> {
+        if addr >= self.start && addr <= self.end {
+            return DeviceResponse::ReadOnly;
         }
 
         DeviceResponse::NotMyAddress
     }
 
     fn get_name(&self) -> String {
-        String::from("Rom")
+        String::from("ROM")
+    }
+
+    fn get_memory(&self) -> &Vec<u8> {
+        &self.memory
     }
 }

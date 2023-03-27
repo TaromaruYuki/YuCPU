@@ -12,7 +12,7 @@ pub fn run(program: Vec<u8>) {
     map.add(ram);
     map.add(rom);
 
-    let mut cpu = cpu::CPU::new(map);
+    let mut cpu = cpu::CPU::new(map, 0x8000);
     let mut pins = cpu.pins;
 
     pins = cpu.tick(pins);

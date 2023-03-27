@@ -149,7 +149,7 @@ impl Instruction {
 
         map.insert(
             0b00_010000,
-            (Opcode::ADD, AddressingMode::Immediate, add_direct),
+            (Opcode::ADD, AddressingMode::Immediate, add_immediate),
         );
         map.insert(
             0b01_010000,
@@ -158,17 +158,17 @@ impl Instruction {
 
         map.insert(
             0b00_010001,
-            (Opcode::SUB, AddressingMode::Immediate, sub_direct),
+            (Opcode::SUB, AddressingMode::Immediate, sub_immediate),
         );
         map.insert(
-            0b01_010010,
+            0b01_010001,
             (Opcode::SUB, AddressingMode::Register, sub_register),
         );
 
         map.insert(0b11_010011, (Opcode::RET, AddressingMode::Discard, ret));
 
-        map.insert(0b11_011110, (Opcode::HLT, AddressingMode::Discard, hlt));
-        map.insert(0b11_011111, (Opcode::NOP, AddressingMode::Discard, nop));
+        map.insert(0b11_111110, (Opcode::HLT, AddressingMode::Discard, hlt));
+        map.insert(0b11_111111, (Opcode::NOP, AddressingMode::Discard, nop));
 
         map
     }
