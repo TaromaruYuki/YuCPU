@@ -3,11 +3,11 @@ pub mod common;
 mod disassembler;
 mod vcpu;
 
+use itertools::Itertools;
 use std::fs::{self};
 use std::path::Path;
 use std::{env, process::exit};
-
-use vcpu::VCPU;
+use vcpu::instruction::opcode::AddressingMode;
 
 fn main() {
     let mut args: Vec<String> = env::args().collect();
@@ -179,12 +179,62 @@ fn main() {
             }
         };
 
-        let mut cpu = VCPU::new();
+        vcpu::run(file);
+    } else if args[0].to_lowercase() == "opcode_table" {
+        let hashmap = vcpu::instruction::opcode::Instruction::hashmap();
 
-        cpu.load_program(file);
+        let mut table = String::from("|     ");
 
-        cpu.run();
+        for i in 0x00..0x10 {
+            table += &format!("| 0x{:01X} ", i);
+        }
 
-        cpu.dump_cpu(vcpu::DumpAction::File);
+        table += "|\n";
+
+        for _ in 0x00..0x11 {
+            table += "| --- ";
+        }
+
+        table += "|\n";
+
+        for i in 0x00..0x10 {
+            table += &format!("| 0x{:01X} ", i);
+            for j in 0x00..0x10 {
+                let mut get: Option<vcpu::instruction::instructions::InstructionInfo> = None;
+
+                for key in hashmap.keys().sorted() {
+                    if key == &(((i << 4) | j) as u8) {
+                        get = Some(hashmap[key]);
+                        break;
+                    }
+                }
+
+                match get {
+                    Some(value) => {
+                        let value_type = match value.1 {
+                            AddressingMode::Immediate => "V",
+                            AddressingMode::Register => "R",
+                            AddressingMode::Direct => "A/L",
+                            AddressingMode::Discard => "",
+                        };
+
+                        table +=
+                            &format!("| 0x{:02X}<br/>{:?} {} ", (i << 4) | j, value.0, value_type);
+                    }
+                    None => {
+                        table += "|   ";
+                    }
+                }
+            }
+            table += "|\n"
+        }
+
+        match fs::write("opcodes.md", table) {
+            Ok(file) => file,
+            Err(error) => {
+                eprintln!("Unable to write output file.\n{error}");
+                exit(1);
+            }
+        };
     }
 }
