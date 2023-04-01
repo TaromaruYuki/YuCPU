@@ -5,8 +5,9 @@ use crate::vcpu::{
         ram::Ram,
         rom::Rom,
     },
-    instruction::opcode::{AddressingMode, Opcode},
 };
+
+use crate::common::instruction::opcode::{AddressingMode, Opcode};
 
 use super::opcode::Instruction;
 

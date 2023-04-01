@@ -3,7 +3,7 @@ use bitflags::bitflags;
 use crate::vcpu::device::DeviceResponse;
 
 use super::device::map::{DeviceMap, DeviceMapResult};
-use super::instruction::opcode::Instruction;
+use crate::common::instruction::opcode::Instruction;
 
 bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -38,6 +38,12 @@ impl Pins {
             address: 0,
             rw: ReadWrite::Read,
         }
+    }
+}
+
+impl Default for Pins {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

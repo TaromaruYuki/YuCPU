@@ -6,7 +6,7 @@ use crate::vcpu::device::map::DeviceMapResult;
 use crate::vcpu::device::DeviceResponse;
 
 pub type InstructionFunction = fn(&mut CPU);
-pub type InstructionInfo = (Opcode, AddressingMode, InstructionFunction);
+pub type InstructionInfo = (Opcode, AddressingMode, InstructionFunction, u8);
 
 pub fn mov_immediate(cpu: &mut CPU) {
     let register: u8 = ((0xE0 & cpu.ir) >> 5) as u8;

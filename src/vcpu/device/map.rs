@@ -127,3 +127,9 @@ impl DeviceMap {
         DeviceMapResult::NoDevices
     }
 }
+
+impl Default for DeviceMap {
+    fn default() -> Self {
+        Self::new()
+    }
+}

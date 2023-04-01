@@ -1,13 +1,17 @@
 mod assembler;
 pub mod common;
-mod disassembler;
 mod vcpu;
 
+use assembler::parser::{Parser, TokenInfoType};
+use assembler::tokenizer::Token;
 use itertools::Itertools;
+use logos::Logos;
 use std::fs::{self};
 use std::path::Path;
+use std::str::FromStr;
 use std::{env, process::exit};
-use vcpu::instruction::opcode::AddressingMode;
+
+use common::instruction::opcode::{AddressingMode, Instruction, Opcode};
 
 fn main() {
     let mut args: Vec<String> = env::args().collect();
@@ -70,8 +74,8 @@ fn main() {
             exit(1);
         }
 
-        let input_file = args[input_pos + 1].clone();
-        let output_file = args[output_pos + 1].clone();
+        let _input_file = args[input_pos + 1].clone();
+        let _output_file = args[output_pos + 1].clone();
 
         // Check if the input file exists
 
@@ -80,61 +84,62 @@ fn main() {
             exit(1);
         }
 
-        let yu_assembler = assembler::Assembler::new(&input_file, &output_file);
+        // let yu_assembler = assembler::Assembler::new(&input_file, &output_file);
 
-        let bytes = yu_assembler.assemble();
+        // let bytes = yu_assembler.assemble();
 
-        match fs::write(output_file, bytes.0) {
-            Ok(file) => file,
-            Err(error) => {
-                eprintln!("Unable to write output file.\n{error}");
-                exit(1);
-            }
-        };
+        // match fs::write(output_file, bytes.0) {
+        //     Ok(file) => file,
+        //     Err(error) => {
+        //         eprintln!("Unable to write output file.\n{error}");
+        //         exit(1);
+        //     }
+        // };
 
-        exit(0);
+        // exit(0);
     } else if args[0].to_lowercase() == "disassemble" {
         // End of assemble
         // Get input file in args
 
-        let input_pos_res = args.iter().position(|r| r == "-i");
+        // let input_pos_res = args.iter().position(|r| r == "-i");
 
-        if input_pos_res.is_none() {
-            eprintln!("Input is required for task \"disassemble\".");
-            exit(1);
-        }
+        // if input_pos_res.is_none() {
+        //     eprintln!("Input is required for task \"disassemble\".");
+        //     exit(1);
+        // }
 
-        let input_pos = input_pos_res.unwrap();
+        // let input_pos = input_pos_res.unwrap();
 
-        // Checking if the input is the final arg
+        // // Checking if the input is the final arg
 
-        if input_pos == args.len() - 1 {
-            eprintln!("Input needs a argument.");
-            exit(1);
-        }
+        // if input_pos == args.len() - 1 {
+        //     eprintln!("Input needs a argument.");
+        //     exit(1);
+        // }
 
-        // Check if we have a valid argument (Just see if it's not a flag, then the OS can check)
+        // // Check if we have a valid argument (Just see if it's not a flag, then the OS can check)
 
-        if args[input_pos + 1].starts_with('-') {
-            eprintln!("Invalid input file.");
-            exit(1);
-        }
+        // if args[input_pos + 1].starts_with('-') {
+        //     eprintln!("Invalid input file.");
+        //     exit(1);
+        // }
 
-        let input_file = args[input_pos + 1].clone();
+        // let input_file = args[input_pos + 1].clone();
 
-        // Check if the input file exists
+        // // Check if the input file exists
 
-        if !Path::new(&args[input_pos + 1]).exists() {
-            eprintln!("Input file \"{}\" does not exist.", args[input_pos + 1]);
-            exit(1);
-        }
+        // if !Path::new(&args[input_pos + 1]).exists() {
+        //     eprintln!("Input file \"{}\" does not exist.", args[input_pos + 1]);
+        //     exit(1);
+        // }
 
-        let disassembler =
-            disassembler::Disassembler::new(&input_file, args.contains(&String::from("-a")));
+        // let disassembler =
+        //     disassembler::Disassembler::new(&input_file, args.contains(&String::from("-a")));
 
-        disassembler.disassemble();
+        // disassembler.disassemble();
 
-        exit(0);
+        // exit(0);
+        println!("disassemble");
     } else if args[0].to_lowercase() == "run" {
         // End of disassemble
         // Get input file in args
@@ -181,7 +186,7 @@ fn main() {
 
         vcpu::run(file);
     } else if args[0].to_lowercase() == "opcode_table" {
-        let hashmap = vcpu::instruction::opcode::Instruction::hashmap();
+        let hashmap = common::instruction::opcode::Instruction::hashmap();
 
         let mut table = String::from("|     ");
 
@@ -200,7 +205,7 @@ fn main() {
         for i in 0x00..0x10 {
             table += &format!("| 0x{:01X} ", i);
             for j in 0x00..0x10 {
-                let mut get: Option<vcpu::instruction::instructions::InstructionInfo> = None;
+                let mut get: Option<common::instruction::instructions::InstructionInfo> = None;
 
                 for key in hashmap.keys().sorted() {
                     if key == &(((i << 4) | j) as u8) {
@@ -236,5 +241,59 @@ fn main() {
                 exit(1);
             }
         };
+    } else if args[0].to_lowercase() == "opcode" {
+        if args.len() == 1 {
+            eprintln!("Opcode not given.");
+        }
+
+        let opcode_str = args[1].clone();
+        let opcode = match Opcode::from_str(&opcode_str.to_lowercase()) {
+            Ok(val) => val,
+            Err(err) => {
+                eprintln!(
+                    "Opcode {} does not exist.\nReceived error {}",
+                    opcode_str, err
+                );
+                exit(14);
+            }
+        };
+
+        let variants = Instruction::get_variants(opcode);
+
+        println!(
+            "=== Opcode {:?} ===\nBinary: {:05b}\nHex: 0x{:01x}\nModes:",
+            opcode, opcode as u8, opcode as u8
+        );
+
+        for mode in variants {
+            let final_opcode = Instruction::create_opcode(opcode, mode);
+            println!("    - {:?} ({:02b})", mode, mode as u8);
+            println!("        - {:08b}", final_opcode);
+            println!("        - 0x{:02x}", final_opcode);
+        }
+    } else if args[0].to_lowercase() == "test" {
+        let mut lex = Token::lexer(".main start\nstart:\npsh 3\npsh 2\npsh 1\njsr add3\npop\npop\npop\nhlt\n\nadd3:\npsh rbp\nmov rbp, rsp\n\nsub rbp, 6\nmov r1, rbp\n\nsub rbp, 2\nmov r2, rbp\n\nsub rbp, 2\nld r3, rbp\n\nadd rbp, 10\n\nadd r1, r2\nadd r1, r3\n\npop rbp\n\nret");
+        let mut tokens: Vec<TokenInfoType> = Vec::new();
+
+        loop {
+            let tok_option = lex.next();
+            let slice = lex.slice();
+
+            if tok_option.is_some() {
+                break;
+            }
+
+            let tok = tok_option.unwrap();
+
+            tokens.push((tok, String::from(slice)));
+        }
+
+        println!("{:?}", tokens);
+
+        let mut parser = Parser::new(tokens);
+        parser.parse();
+
+        println!("!! Metadata: {:?}", parser.metadata);
+        println!("!! Labels: {:#?}", parser.labels);
     }
 }

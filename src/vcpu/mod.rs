@@ -2,7 +2,6 @@
 
 pub mod cpu;
 pub mod device;
-pub mod instruction;
 
 pub fn run(program: Vec<u8>) {
     println!("{:?}", program);

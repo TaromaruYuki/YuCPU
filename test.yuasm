@@ -1,10 +1,5 @@
 .main start
 
-.data
-
-@str1:
-	DAT "Hello"
-
 .text
 
 @start:
