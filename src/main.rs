@@ -4,6 +4,7 @@ mod vcpu;
 
 use assembler::parser::{Parser, TokenInfoType};
 use assembler::tokenizer::Token;
+use assembler::Assembler;
 use itertools::Itertools;
 use logos::Logos;
 use std::fs::{self};
@@ -272,14 +273,14 @@ fn main() {
             println!("        - 0x{:02x}", final_opcode);
         }
     } else if args[0].to_lowercase() == "test" {
-        let mut lex = Token::lexer(".main start\nstart:\npsh 3\npsh 2\npsh 1\njsr add3\npop\npop\npop\nhlt\n\nadd3:\npsh rbp\nmov rbp, rsp\n\nsub rbp, 6\nmov r1, rbp\n\nsub rbp, 2\nmov r2, rbp\n\nsub rbp, 2\nld r3, rbp\n\nadd rbp, 10\n\nadd r1, r2\nadd r1, r3\n\npop rbp\n\nret");
+        let mut lex = Token::lexer(".main start\nstart:\nmov r1, 1\nmov r2, 2\nmov r3, 3\nadd r1, r2\nadd r1, r3\npsh r1\nhlt");
         let mut tokens: Vec<TokenInfoType> = Vec::new();
 
         loop {
             let tok_option = lex.next();
             let slice = lex.slice();
 
-            if tok_option.is_some() {
+            if tok_option.is_none() {
                 break;
             }
 
@@ -288,12 +289,24 @@ fn main() {
             tokens.push((tok, String::from(slice)));
         }
 
-        println!("{:?}", tokens);
-
         let mut parser = Parser::new(tokens);
-        parser.parse();
+        let parser_res = parser.parse();
 
-        println!("!! Metadata: {:?}", parser.metadata);
-        println!("!! Labels: {:#?}", parser.labels);
+        println!("{:?}", parser_res);
+
+        let assembler = Assembler::new(parser_res);
+        let bytecode = assembler.assemble();
+
+        print!("[");
+
+        for (i, c) in bytecode.iter().enumerate() {
+            print!("0x{:02x}", c);
+
+            if i < bytecode.len() - 1 {
+                print!(", ");
+            }
+        }
+
+        println!("]");
     }
 }

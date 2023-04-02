@@ -7,28 +7,40 @@ pub type TokenInfoType = (Token, String);
 
 use regex::Regex;
 
-#[derive(Debug)]
-enum InstructionArg {
+#[derive(Debug, Clone)]
+pub enum InstructionArg {
     Register(u8),
     Number(u16),
     Address(u32),
     Identifier(String),
 }
 
-#[derive(Debug)]
-enum InstructionType {
+#[derive(Debug, Clone, PartialEq)]
+pub enum InstructionType {
     Zero,
     One,
     Two,
 }
 
 #[derive(Debug)]
+pub struct ParserResult {
+    pub metadata: HashMap<String, MetadataValue>,
+    pub labels: Vec<Label>,
+}
+
+impl ParserResult {
+    pub fn new(metadata: HashMap<String, MetadataValue>, labels: Vec<Label>) -> ParserResult {
+        ParserResult { metadata, labels }
+    }
+}
+
+#[derive(Debug, Clone)]
 #[allow(dead_code)]
-struct ParserInstruction {
-    opcode: Opcode,
-    addressing_mode: AddressingMode,
-    instruction_type: InstructionType,
-    args: Vec<InstructionArg>,
+pub struct ParserInstruction {
+    pub opcode: Opcode,
+    pub addressing_mode: AddressingMode,
+    pub instruction_type: InstructionType,
+    pub args: Vec<InstructionArg>,
 }
 
 impl ParserInstruction {
@@ -154,16 +166,16 @@ impl ParserInstruction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum MetadataValue {
     String(String),
     Number(u16),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Label {
-    name: String,
-    instructions: Vec<ParserInstruction>,
+    pub name: String,
+    pub instructions: Vec<ParserInstruction>,
 }
 
 impl Label {
@@ -246,10 +258,11 @@ impl Parser {
         false
     }
 
-    pub fn parse(&mut self) {
+    pub fn parse(&mut self) -> ParserResult {
         while self.current_token_index < self.tokens.len() as u32 {
-            if self.get_token().is_some() {
-                return;
+            println!("Tokens");
+            if self.get_token().is_none() {
+                break;
             }
 
             let token = self.get_token().unwrap();
@@ -263,11 +276,11 @@ impl Parser {
             }
         }
 
-        println!("Done!");
+        ParserResult::new(self.metadata.clone(), self.labels.clone())
     }
 
     fn parse_metadata(&mut self) {
-        if self.get_token().is_some() {
+        if self.get_token().is_none() {
             panic!("No tokens left, expecting metadata.");
         }
 
@@ -304,7 +317,7 @@ impl Parser {
     }
 
     fn parse_label(&mut self) {
-        if self.get_token().is_some() {
+        if self.get_token().is_none() {
             panic!("No tokens left, expecting label.");
         }
 
@@ -320,7 +333,7 @@ impl Parser {
         let mut label = Label::new(label_name);
 
         loop {
-            if self.get_token().is_some() {
+            if self.get_token().is_none() {
                 break;
             }
 
@@ -347,7 +360,7 @@ impl Parser {
     }
 
     fn make_instruction(&mut self) -> ParserInstruction {
-        if self.get_token().is_some() {
+        if self.get_token().is_none() {
             panic!("No tokens left, expecting instruction.");
         }
 
@@ -359,7 +372,7 @@ impl Parser {
 
         self.current_token_index += 1;
 
-        if self.get_token().is_some() {
+        if self.get_token().is_none() {
             // Depends on what the instruction is, we may not need any args.
             return ParserInstruction::get_instruction(opcode, vec![]);
         }
@@ -403,7 +416,7 @@ impl Parser {
 
                 args.push(InstructionArg::Register(reg_num));
 
-                if self.peek_token().is_some() {
+                if self.peek_token().is_none() {
                     return ParserInstruction::get_instruction(opcode, args);
                 }
 
@@ -418,7 +431,7 @@ impl Parser {
 
                 self.current_token_index += 1;
 
-                if self.get_token().is_some() {
+                if self.get_token().is_none() {
                     panic!("Expected second argument, got nothing.");
                 }
 

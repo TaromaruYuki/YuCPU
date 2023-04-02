@@ -1,3 +1,5 @@
+#![allow(unused_assignments)]
+
 use crate::vcpu::{
     cpu::{Flags, CPU},
     device::{

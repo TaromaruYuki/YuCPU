@@ -9,13 +9,13 @@ pub type InstructionFunction = fn(&mut CPU);
 pub type InstructionInfo = (Opcode, AddressingMode, InstructionFunction, u8);
 
 pub fn mov_immediate(cpu: &mut CPU) {
-    let register: u8 = ((0xE0 & cpu.ir) >> 5) as u8;
+    let register: u8 = ((0xF0 & cpu.ir) >> 4) as u8;
     *cpu.decode_register(register) = cpu.dr;
     cpu.advance();
 }
 
 pub fn mov_register(cpu: &mut CPU) {
-    let register: u8 = ((0xE0 & cpu.ir) >> 5) as u8;
+    let register: u8 = ((0xF0 & cpu.ir) >> 4) as u8;
     *cpu.decode_register(register) = *cpu.decode_register(cpu.dr as u8);
     cpu.advance();
 }
@@ -36,7 +36,7 @@ pub fn ld_register(cpu: &mut CPU) {
         }
     };
 
-    *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) = res;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = res;
     cpu.advance();
 }
 
@@ -59,7 +59,7 @@ pub fn ld_address(cpu: &mut CPU) {
         }
     };
 
-    *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) = res;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = res;
     cpu.advance();
 }
 
@@ -78,7 +78,7 @@ pub fn ldb_register(cpu: &mut CPU) {
         }
     };
 
-    *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) = res as u16;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = res as u16;
     cpu.advance();
 }
 
@@ -101,7 +101,7 @@ pub fn ldb_address(cpu: &mut CPU) {
         }
     };
 
-    *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) = res as u16;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = res as u16;
     cpu.advance();
 }
 
@@ -123,7 +123,7 @@ pub fn psh_immediate(cpu: &mut CPU) {
 }
 
 pub fn psh_register(cpu: &mut CPU) {
-    let value = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8);
+    let value = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
     match cpu.map.write(cpu.sp as u32, value) {
         DeviceMapResult::Ok(_) => (),
         DeviceMapResult::NoDevices => panic!("No devices attached. Could not write any values."),
@@ -195,12 +195,12 @@ pub fn pop_register(cpu: &mut CPU) {
         }
     };
 
-    *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) = value;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = value;
     cpu.advance();
 }
 
 pub fn st_register(cpu: &mut CPU) {
-    let value = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8);
+    let value = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
 
     let address = *cpu.decode_register(cpu.dr as u8) as u32;
 
@@ -220,7 +220,7 @@ pub fn st_register(cpu: &mut CPU) {
 }
 
 pub fn st_address(cpu: &mut CPU) {
-    let value = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8);
+    let value = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
 
     let address: u32 = if cpu.flags.contains(Flags::D) {
         ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u32
@@ -244,7 +244,7 @@ pub fn st_address(cpu: &mut CPU) {
 }
 
 pub fn stl_register(cpu: &mut CPU) {
-    let value = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) as u8;
+    let value = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) as u8;
 
     let address = *cpu.decode_register(cpu.dr as u8) as u32;
 
@@ -264,7 +264,7 @@ pub fn stl_register(cpu: &mut CPU) {
 }
 
 pub fn stl_address(cpu: &mut CPU) {
-    let value = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) as u8;
+    let value = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) as u8;
 
     let address: u32 = if cpu.flags.contains(Flags::D) {
         ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u32
@@ -288,7 +288,7 @@ pub fn stl_address(cpu: &mut CPU) {
 }
 
 pub fn sth_register(cpu: &mut CPU) {
-    let value = ((*cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8)) >> 8) as u8;
+    let value = ((*cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8)) >> 8) as u8;
 
     let address = *cpu.decode_register(cpu.dr as u8) as u32;
 
@@ -308,7 +308,7 @@ pub fn sth_register(cpu: &mut CPU) {
 }
 
 pub fn sth_address(cpu: &mut CPU) {
-    let value = ((*cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8)) >> 8) as u8;
+    let value = ((*cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8)) >> 8) as u8;
 
     let address: u32 = if cpu.flags.contains(Flags::D) {
         ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u32
@@ -351,7 +351,7 @@ fn compare(cpu: &mut CPU, val1: u16, val2: u16) {
 }
 
 pub fn cmp_immediate(cpu: &mut CPU) {
-    let val1 = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8);
+    let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
     let val2 = cpu.dr;
 
     compare(cpu, val1, val2);
@@ -360,7 +360,7 @@ pub fn cmp_immediate(cpu: &mut CPU) {
 }
 
 pub fn cmp_register(cpu: &mut CPU) {
-    let val1 = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8);
+    let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
     let val2 = *cpu.decode_register(cpu.dr as u8);
 
     compare(cpu, val1, val2);
@@ -441,22 +441,22 @@ fn add(cpu: &mut CPU, val1: u16, val2: u16) -> u16 {
 }
 
 pub fn add_immediate(cpu: &mut CPU) {
-    let val1 = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8);
+    let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
     let val2 = cpu.dr;
 
     let result = add(cpu, val1, val2);
 
-    *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) = result;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = result;
     cpu.advance();
 }
 
 pub fn add_register(cpu: &mut CPU) {
-    let val1 = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8);
+    let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
     let val2 = *cpu.decode_register(cpu.dr as u8);
 
     let result = add(cpu, val1, val2);
 
-    *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) = result;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = result;
     cpu.advance();
 }
 
@@ -473,22 +473,22 @@ fn sub(cpu: &mut CPU, val1: u16, val2: u16) -> u16 {
 }
 
 pub fn sub_immediate(cpu: &mut CPU) {
-    let val1 = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8);
+    let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
     let val2 = cpu.dr;
 
     let result = sub(cpu, val1, val2);
 
-    *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) = result;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = result;
     cpu.advance();
 }
 
 pub fn sub_register(cpu: &mut CPU) {
-    let val1 = *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8);
+    let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
     let val2 = *cpu.decode_register(cpu.dr as u8);
 
     let result = sub(cpu, val1, val2);
 
-    *cpu.decode_register(((0xE0 & cpu.ir) >> 5) as u8) = result;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = result;
     cpu.advance();
 }
 
