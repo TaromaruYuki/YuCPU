@@ -178,7 +178,7 @@ impl ParserInstruction {
                     } else {
                         init_len += 1;
                     }
-                },
+                }
                 InstructionArg::Address(addr) => {
                     if addr <= 255 {
                         init_len += 1;
@@ -187,13 +187,15 @@ impl ParserInstruction {
                     } else {
                         init_len += 3;
                     }
-                },
+                }
                 InstructionArg::Identifier(_) => init_len += 2,
             },
             InstructionType::Two => {
                 match self.args[0] {
                     InstructionArg::Register(_) => (),
-                    _ => panic!("Instruction arg 0 is not a register when checking instruction size."),
+                    _ => panic!(
+                        "Instruction arg 0 is not a register when checking instruction size."
+                    ),
                 }
 
                 match self.args[1] {
@@ -204,7 +206,7 @@ impl ParserInstruction {
                         } else {
                             init_len += 1;
                         }
-                    },
+                    }
                     InstructionArg::Address(addr) => {
                         if addr <= 255 {
                             init_len += 1;
@@ -213,7 +215,7 @@ impl ParserInstruction {
                         } else {
                             init_len += 3;
                         }
-                    },
+                    }
                     InstructionArg::Identifier(_) => init_len += 2,
                 }
             }

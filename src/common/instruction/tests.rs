@@ -58,7 +58,7 @@ fn test_mov_immediate_byte() {
 
 #[test]
 fn test_mov_immediate_word() {
-    let rom = Rom::new(vec![0x00, 0x14, 0xAB, 0xCD], 0x0000);
+    let rom = Rom::new(vec![0x00, 0x04, 0xAB, 0xCD], 0x0000);
 
     let mut map = DeviceMap::new();
     map.add(rom);
@@ -152,7 +152,7 @@ fn test_ldb_address() {
 
 #[test]
 fn test_cmp_immediate_eq() {
-    let rom = Rom::new(vec![0x08, 0x40, 0x5], 0x0000);
+    let rom = Rom::new(vec![0x08, 0x20, 0x5], 0x0000);
 
     let mut map = DeviceMap::new();
     map.add(rom);
@@ -172,7 +172,7 @@ fn test_cmp_immediate_eq() {
 
 #[test]
 fn test_cmp_immediate_lt() {
-    let rom = Rom::new(vec![0x08, 0x40, 0x5], 0x0000);
+    let rom = Rom::new(vec![0x08, 0x20, 0x5], 0x0000);
 
     let mut map = DeviceMap::new();
     map.add(rom);
@@ -192,7 +192,7 @@ fn test_cmp_immediate_lt() {
 
 #[test]
 fn test_cmp_immediate_gt() {
-    let rom = Rom::new(vec![0x08, 0x40, 0x5], 0x0000);
+    let rom = Rom::new(vec![0x08, 0x20, 0x5], 0x0000);
 
     let mut map = DeviceMap::new();
     map.add(rom);
@@ -212,7 +212,7 @@ fn test_cmp_immediate_gt() {
 
 #[test]
 fn test_cmp_register_eq() {
-    let rom = Rom::new(vec![0x48, 0x40, 0x0], 0x0000);
+    let rom = Rom::new(vec![0x48, 0x20, 0x0], 0x0000);
 
     let mut map = DeviceMap::new();
     map.add(rom);
@@ -233,7 +233,7 @@ fn test_cmp_register_eq() {
 
 #[test]
 fn test_cmp_register_lt() {
-    let rom = Rom::new(vec![0x48, 0x40, 0x0], 0x0000);
+    let rom = Rom::new(vec![0x48, 0x20, 0x0], 0x0000);
 
     let mut map = DeviceMap::new();
     map.add(rom);
@@ -254,7 +254,7 @@ fn test_cmp_register_lt() {
 
 #[test]
 fn test_cmp_register_gt() {
-    let rom = Rom::new(vec![0x48, 0x40, 0x0], 0x0000);
+    let rom = Rom::new(vec![0x48, 0x20, 0x0], 0x0000);
 
     let mut map = DeviceMap::new();
     map.add(rom);

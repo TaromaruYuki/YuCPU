@@ -351,6 +351,7 @@ fn compare(cpu: &mut CPU, val1: u16, val2: u16) {
 }
 
 pub fn cmp_immediate(cpu: &mut CPU) {
+    println!("!!! Decoding register {}", ((0xF0 & cpu.ir) >> 4) as u8);
     let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
     let val2 = cpu.dr;
 
@@ -371,7 +372,7 @@ pub fn cmp_register(cpu: &mut CPU) {
 fn branch_flag_set(cpu: &mut CPU, flag: Flags) {
     if cpu.flags.contains(flag) {
         cpu.pc = if cpu.flags.contains(Flags::D) {
-            ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u16
+            (cpu.dr << 4) | ((cpu.ad as u16) & 0xF)
         } else {
             cpu.dr
         };
@@ -384,7 +385,7 @@ fn branch_flag_set(cpu: &mut CPU, flag: Flags) {
 fn branch_flag_not_set(cpu: &mut CPU, flag: Flags) {
     if !cpu.flags.contains(flag) {
         cpu.pc = if cpu.flags.contains(Flags::D) {
-            ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u16
+            (cpu.dr << 4) | ((cpu.ad as u16) & 0xF)
         } else {
             cpu.dr
         };
@@ -416,7 +417,7 @@ pub fn bne(cpu: &mut CPU) {
 
 pub fn jmp(cpu: &mut CPU) {
     cpu.pc = if cpu.flags.contains(Flags::D) {
-        ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u16
+        (cpu.dr << 4) | ((cpu.ad as u16) & 0xF)
     } else {
         cpu.dr
     };
@@ -438,11 +439,11 @@ pub fn jsr(cpu: &mut CPU) {
     cpu.sp += 2;
 
     cpu.pc = if cpu.flags.contains(Flags::D) {
-        ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u16
+        (cpu.dr << 4) | ((cpu.ad as u16) & 0xF)
     } else {
         cpu.dr
     };
-    
+
     println!("!!! Jumped to $0x{:05x}", cpu.pc);
 }
 

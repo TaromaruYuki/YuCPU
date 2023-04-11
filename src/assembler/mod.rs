@@ -3,7 +3,7 @@ pub mod tokenizer;
 
 use crate::common::instruction::opcode::Instruction;
 
-use self::parser::{InstructionArg, InstructionType, ParserResult, Label};
+use self::parser::{InstructionArg, InstructionType, Label, ParserResult};
 
 pub struct Assembler {
     parser_res: ParserResult,
@@ -76,13 +76,14 @@ impl Assembler {
                             }
                         }
                         InstructionArg::Identifier(ident) => {
-                            let label = Assembler::find_label(ident, &self.parser_res.labels).unwrap();
+                            let label =
+                                Assembler::find_label(ident, &self.parser_res.labels).unwrap();
 
                             meta |= 0b0000_0100;
                             output.push(meta);
                             output.push((label.addr >> 8) as u8);
                             output.push(label.addr as u8);
-                        },
+                        }
                     },
                     InstructionType::Two => {
                         match &instruction.args[0] {
@@ -126,13 +127,14 @@ impl Assembler {
                                 }
                             }
                             InstructionArg::Identifier(ident) => {
-                                let label = Assembler::find_label(ident, &self.parser_res.labels).unwrap();
+                                let label =
+                                    Assembler::find_label(ident, &self.parser_res.labels).unwrap();
 
                                 meta |= 0b0000_0100;
                                 output.push(meta);
                                 output.push((label.addr >> 8) as u8);
                                 output.push(label.addr as u8);
-                            },
+                            }
                         }
                     }
                 }

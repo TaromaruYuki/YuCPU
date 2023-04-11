@@ -33,8 +33,11 @@ pub fn run(program: Vec<u8>) {
     while cpu.running {
         pins = cpu.tick(pins);
     }
-    
-    fs::write("cpu_dump.txt", format!("Program Counter: 0x{:04x}
+
+    fs::write(
+        "cpu_dump.txt",
+        format!(
+            "Program Counter: 0x{:04x}
 Stack Pointer: 0x{:04x}
 
 Register:
@@ -53,18 +56,20 @@ Flags:
     DWord: {}
 
 Memory dump: 'memory.bin'",
-    cpu.pc,
-    cpu.sp,
-    cpu.r1,
-    cpu.r2,
-    cpu.r3,
-    cpu.r4,
-    cpu.r5,
-    cpu.r6,
-    flag_value!(cpu.flags.contains(Flags::Z)),
-    flag_value!(cpu.flags.contains(Flags::G)),
-    flag_value!(cpu.flags.contains(Flags::L)),
-    flag_value!(cpu.flags.contains(Flags::O)),
-    flag_value!(cpu.flags.contains(Flags::D)),
-)).unwrap();
+            cpu.pc,
+            cpu.sp,
+            cpu.r1,
+            cpu.r2,
+            cpu.r3,
+            cpu.r4,
+            cpu.r5,
+            cpu.r6,
+            flag_value!(cpu.flags.contains(Flags::Z)),
+            flag_value!(cpu.flags.contains(Flags::G)),
+            flag_value!(cpu.flags.contains(Flags::L)),
+            flag_value!(cpu.flags.contains(Flags::O)),
+            flag_value!(cpu.flags.contains(Flags::D)),
+        ),
+    )
+    .unwrap();
 }

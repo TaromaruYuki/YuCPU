@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 
-use crate::{vcpu::device::DeviceResponse, common::instruction::opcode::InstructionError};
+use crate::{common::instruction::opcode::InstructionError, vcpu::device::DeviceResponse};
 
 use super::device::map::{DeviceMap, DeviceMapResult};
 use crate::common::instruction::opcode::Instruction;
@@ -190,8 +190,10 @@ impl CPU {
         let res = match Instruction::from_opcode(&(((mask & self.ir) >> 8) as u8)) {
             Ok(data) => data,
             Err(error) => match error {
-                InstructionError::InvalidOpcode => panic!("Invalid opcode: {}", &(((mask & self.ir) >> 8) as u8))
-            }
+                InstructionError::InvalidOpcode => {
+                    panic!("Invalid opcode: {}", &(((mask & self.ir) >> 8) as u8))
+                }
+            },
         };
 
         println!("Running {:?} with addr mode {:?}.", res.opcode, res.mode);
