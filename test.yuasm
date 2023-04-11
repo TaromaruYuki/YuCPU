@@ -1,11 +1,36 @@
 .main start
 
-.data
+main:
+    psh 3
+    psh 2
+    psh 1
 
-@str1:
-	DAT "Hello"
+    jsr add3
 
-.text
+    pop
+    pop
+    pop
 
-@start:
-	MOV R1, str1
+    hlt
+
+add3:
+    psh rbp
+    mov rbp, rsp
+
+    sub rbp, 6
+    ld r1, rbp
+
+    sub rbp, 2
+    ld r2, rbp
+
+    sub rbp, 2
+    ld r3, rbp
+
+    add rbp, 10
+
+    add r1, r2
+    add r1, r3
+
+    pop rbp
+
+    ret
