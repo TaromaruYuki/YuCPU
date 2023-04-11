@@ -7,7 +7,8 @@ use assembler::tokenizer::Token;
 use assembler::Assembler;
 use itertools::Itertools;
 use logos::Logos;
-use std::fs::{self};
+use std::fs::{self, File};
+use std::io::BufRead;
 use std::path::Path;
 use std::str::FromStr;
 use std::{env, process::exit};
@@ -75,8 +76,8 @@ fn main() {
             exit(1);
         }
 
-        let _input_file = args[input_pos + 1].clone();
-        let _output_file = args[output_pos + 1].clone();
+        let input_file = args[input_pos + 1].clone();
+        let output_file = args[output_pos + 1].clone();
 
         // Check if the input file exists
 
@@ -85,19 +86,50 @@ fn main() {
             exit(1);
         }
 
-        // let yu_assembler = assembler::Assembler::new(&input_file, &output_file);
+        let mut input_content: String = String::from("");
 
-        // let bytes = yu_assembler.assemble();
+        let file = match File::open(&input_file) {
+            Err(why) => panic!("Opening file \"{}\" failed!\n\n{}", input_file, why),
+            Ok(file) => file,
+        };
 
-        // match fs::write(output_file, bytes.0) {
-        //     Ok(file) => file,
-        //     Err(error) => {
-        //         eprintln!("Unable to write output file.\n{error}");
-        //         exit(1);
-        //     }
-        // };
+        let buffer = std::io::BufReader::new(file);
 
-        // exit(0);
+        for line in buffer.lines().flatten() {
+            input_content.push_str(&format!("{}\n", line));
+        }
+
+        let mut lex = Token::lexer(&input_content);
+        let mut tokens: Vec<TokenInfoType> = Vec::new();
+
+        loop {
+            let tok_option = lex.next();
+            let slice = lex.slice();
+
+            if tok_option.is_none() {
+                break;
+            }
+
+            let tok = tok_option.unwrap();
+
+            tokens.push((tok, String::from(slice)));
+        }
+
+        let mut parser = Parser::new(tokens);
+        let parser_res = parser.parse();
+
+        let assembler = Assembler::new(parser_res);
+        let bytecode = assembler.assemble();
+
+        match fs::write(output_file, bytecode) {
+            Ok(file) => file,
+            Err(error) => {
+                eprintln!("Unable to write output file.\n{error}");
+                exit(1);
+            }
+        };
+
+        exit(0);
     } else if args[0].to_lowercase() == "disassemble" {
         // End of assemble
         // Get input file in args
@@ -272,41 +304,5 @@ fn main() {
             println!("        - {:08b}", final_opcode);
             println!("        - 0x{:02x}", final_opcode);
         }
-    } else if args[0].to_lowercase() == "test" {
-        let mut lex = Token::lexer(".main start\nstart:\nmov r1, 1\nmov r2, 2\nmov r3, 3\nadd r1, r2\nadd r1, r3\npsh r1\nhlt");
-        let mut tokens: Vec<TokenInfoType> = Vec::new();
-
-        loop {
-            let tok_option = lex.next();
-            let slice = lex.slice();
-
-            if tok_option.is_none() {
-                break;
-            }
-
-            let tok = tok_option.unwrap();
-
-            tokens.push((tok, String::from(slice)));
-        }
-
-        let mut parser = Parser::new(tokens);
-        let parser_res = parser.parse();
-
-        println!("{:?}", parser_res);
-
-        let assembler = Assembler::new(parser_res);
-        let bytecode = assembler.assemble();
-
-        print!("[");
-
-        for (i, c) in bytecode.iter().enumerate() {
-            print!("0x{:02x}", c);
-
-            if i < bytecode.len() - 1 {
-                print!(", ");
-            }
-        }
-
-        println!("]");
     }
 }

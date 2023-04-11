@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 
-use crate::vcpu::device::DeviceResponse;
+use crate::{vcpu::device::DeviceResponse, common::instruction::opcode::InstructionError};
 
 use super::device::map::{DeviceMap, DeviceMapResult};
 use crate::common::instruction::opcode::Instruction;
@@ -96,6 +96,7 @@ impl CPU {
 
 impl CPU {
     pub fn tick(&mut self, mut pins: Pins) -> Pins {
+        self.flags.set(Flags::D, false);
         pins.rw = ReadWrite::Read;
 
         self.ir = match self.map.read(self.pc as u32) {
@@ -146,8 +147,8 @@ impl CPU {
                 self.is = 4;
             }
             0b10 => {
-                self.dr = match self.map.read((self.pc + 2) as u32) {
-                    DeviceMapResult::Ok(data) => data,
+                self.ad = match self.map.read_byte((self.pc + 2) as u32) {
+                    DeviceMapResult::Ok(data) => data & 0xF,
                     DeviceMapResult::NoDevices => {
                         panic!("No devices attached. Could not get instruction data.")
                     }
@@ -160,8 +161,8 @@ impl CPU {
                     }
                 };
 
-                self.ad = match self.map.read_byte((self.pc + 4) as u32) {
-                    DeviceMapResult::Ok(data) => data & 0xF,
+                self.dr = match self.map.read((self.pc + 3) as u32) {
+                    DeviceMapResult::Ok(data) => data,
                     DeviceMapResult::NoDevices => {
                         panic!("No devices attached. Could not get instruction data.")
                     }
@@ -188,15 +189,18 @@ impl CPU {
 
         let res = match Instruction::from_opcode(&(((mask & self.ir) >> 8) as u8)) {
             Ok(data) => data,
-            Err(error) => panic!("Instruction error: {:?}", error),
+            Err(error) => match error {
+                InstructionError::InvalidOpcode => panic!("Invalid opcode: {}", &(((mask & self.ir) >> 8) as u8))
+            }
         };
 
         println!("Running {:?} with addr mode {:?}.", res.opcode, res.mode);
         println!(
-            "Opcode {:08b} ir {} dr {}",
+            "Opcode {:08b} ir {} dr {} ad {}",
             (mask & self.ir),
             self.ir,
-            self.dr
+            self.dr,
+            self.ad,
         );
 
         println!("Executing instruction...");

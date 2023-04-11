@@ -370,7 +370,11 @@ pub fn cmp_register(cpu: &mut CPU) {
 
 fn branch_flag_set(cpu: &mut CPU, flag: Flags) {
     if cpu.flags.contains(flag) {
-        cpu.pc = cpu.dr;
+        cpu.pc = if cpu.flags.contains(Flags::D) {
+            ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u16
+        } else {
+            cpu.dr
+        };
         return;
     }
 
@@ -379,7 +383,11 @@ fn branch_flag_set(cpu: &mut CPU, flag: Flags) {
 
 fn branch_flag_not_set(cpu: &mut CPU, flag: Flags) {
     if !cpu.flags.contains(flag) {
-        cpu.pc = cpu.dr;
+        cpu.pc = if cpu.flags.contains(Flags::D) {
+            ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u16
+        } else {
+            cpu.dr
+        };
         return;
     }
 
@@ -407,7 +415,11 @@ pub fn bne(cpu: &mut CPU) {
 }
 
 pub fn jmp(cpu: &mut CPU) {
-    cpu.pc = cpu.dr;
+    cpu.pc = if cpu.flags.contains(Flags::D) {
+        ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u16
+    } else {
+        cpu.dr
+    };
 }
 
 pub fn jsr(cpu: &mut CPU) {
@@ -425,7 +437,13 @@ pub fn jsr(cpu: &mut CPU) {
 
     cpu.sp += 2;
 
-    cpu.pc = cpu.dr;
+    cpu.pc = if cpu.flags.contains(Flags::D) {
+        ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u16
+    } else {
+        cpu.dr
+    };
+    
+    println!("!!! Jumped to $0x{:05x}", cpu.pc);
 }
 
 fn add(cpu: &mut CPU, val1: u16, val2: u16) -> u16 {

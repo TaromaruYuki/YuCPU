@@ -1,20 +1,19 @@
-Program Counter: 0xDAE9
-Stack Pointer: 0x000A
+Program Counter: 0x0013
+Stack Pointer: 0x8000
 
 Register:
-    R1: 0x0
-    R2: 0x5
-    R3: 0x0
-    R4: 0x0
-    R5: 0x0
-    R6: 0x0
+    R1: 0x06
+    R2: 0x02
+    R3: 0x03
+    R4: 0x00
+    R5: 0x00
+    R6: 0x00
 
 Flags:
-    Zero: 1
-    GT  : 0
-    LT  : 0
-    OvrF: 0
-
-Stack: [0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04]
+    Zero: Off
+    GT  : Off
+    LT  : Off
+    OvrF: Off
+    DWord: Off
 
 Memory dump: 'memory.bin'

@@ -164,6 +164,63 @@ impl ParserInstruction {
             }
         }
     }
+
+    fn len(&self) -> usize {
+        let mut init_len: usize = 2;
+
+        match self.instruction_type {
+            InstructionType::Zero => (),
+            InstructionType::One => match self.args[0] {
+                InstructionArg::Register(_) => (),
+                InstructionArg::Number(num) => {
+                    if num > 255 {
+                        init_len += 2;
+                    } else {
+                        init_len += 1;
+                    }
+                },
+                InstructionArg::Address(addr) => {
+                    if addr <= 255 {
+                        init_len += 1;
+                    } else if addr <= 65535 {
+                        init_len += 2;
+                    } else {
+                        init_len += 3;
+                    }
+                },
+                InstructionArg::Identifier(_) => init_len += 2,
+            },
+            InstructionType::Two => {
+                match self.args[0] {
+                    InstructionArg::Register(_) => (),
+                    _ => panic!("Instruction arg 0 is not a register when checking instruction size."),
+                }
+
+                match self.args[1] {
+                    InstructionArg::Register(_) => (),
+                    InstructionArg::Number(num) => {
+                        if num > 255 {
+                            init_len += 2;
+                        } else {
+                            init_len += 1;
+                        }
+                    },
+                    InstructionArg::Address(addr) => {
+                        if addr <= 255 {
+                            init_len += 1;
+                        } else if addr <= 65535 {
+                            init_len += 2;
+                        } else {
+                            init_len += 3;
+                        }
+                    },
+                    InstructionArg::Identifier(_) => init_len += 2,
+                }
+            }
+        }
+
+        init_len
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -176,18 +233,30 @@ pub enum MetadataValue {
 pub struct Label {
     pub name: String,
     pub instructions: Vec<ParserInstruction>,
+    pub addr: usize,
 }
 
 impl Label {
-    pub fn new(name: String) -> Label {
+    pub fn new(name: String, addr: usize) -> Label {
         Label {
             name,
             instructions: Vec::new(),
+            addr,
         }
     }
 
     fn add(&mut self, instruction: ParserInstruction) {
         self.instructions.push(instruction);
+    }
+
+    pub fn len(&self) -> usize {
+        let mut size: usize = 0;
+
+        for instruction in &self.instructions {
+            size += instruction.len();
+        }
+
+        size
     }
 }
 
@@ -196,6 +265,7 @@ pub struct Parser {
     pub metadata: HashMap<String, MetadataValue>,
     pub labels: Vec<Label>,
     current_token_index: u32,
+    label_offset: usize,
 }
 
 impl Parser {
@@ -205,6 +275,7 @@ impl Parser {
             metadata: HashMap::new(),
             labels: Vec::new(),
             current_token_index: 0,
+            label_offset: 0,
         }
     }
 
@@ -260,7 +331,7 @@ impl Parser {
 
     pub fn parse(&mut self) -> ParserResult {
         while self.current_token_index < self.tokens.len() as u32 {
-            println!("Tokens");
+            // println!("Tokens");
             if self.get_token().is_none() {
                 break;
             }
@@ -330,7 +401,7 @@ impl Parser {
 
         self.current_token_index += 1;
 
-        let mut label = Label::new(label_name);
+        let mut label = Label::new(label_name, self.label_offset);
 
         loop {
             if self.get_token().is_none() {
@@ -351,6 +422,8 @@ impl Parser {
 
             label.add(instruction);
         }
+
+        self.label_offset += label.len();
 
         if label.instructions.is_empty() {
             panic!("Label {} has no body.", label.name);
