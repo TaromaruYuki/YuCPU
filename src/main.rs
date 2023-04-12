@@ -10,9 +10,9 @@ use itertools::Itertools;
 use logos::Logos;
 use std::fs::{self, File};
 use std::io::BufRead;
-use std::path::{PathBuf};
+use std::path::PathBuf;
+use std::process::exit;
 use std::str::FromStr;
-use std::{process::exit};
 
 use common::instruction::opcode::{AddressingMode, Instruction, Opcode};
 
@@ -22,33 +22,37 @@ use common::instruction::opcode::{AddressingMode, Instruction, Opcode};
 #[command(about = "A custom CPU created by TaromaruYuki", long_about=None)]
 struct Args {
     #[command(subcommand)]
-    command: Commands
+    command: Commands,
 }
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    #[command(arg_required_else_help = true, about="Assemble YuCPU Assembly.")]
+    #[command(arg_required_else_help = true, about = "Assemble YuCPU Assembly.")]
     Assemble {
         #[arg(short, long)]
         input: PathBuf,
 
         #[arg(short, long)]
-        output: PathBuf
+        output: PathBuf,
     },
 
-    #[command(arg_required_else_help = true, about="Run the YuCPU PC.")]
+    #[command(arg_required_else_help = true, about = "Run the YuCPU PC.")]
     Run {
         #[arg(short, long)]
         input: PathBuf,
     },
 
-    #[command(arg_required_else_help = true, about="Generate a markdown opcode table.")]
+    #[command(
+        arg_required_else_help = true,
+        about = "Generate a markdown opcode table."
+    )]
     OpcodeTable,
 
-    #[command(arg_required_else_help = true, about="Get information about a specific instruction.")]
-    Instruction {
-        instruction: String
-    }
+    #[command(
+        arg_required_else_help = true,
+        about = "Get information about a specific instruction."
+    )]
+    Instruction { instruction: String },
 }
 
 fn main() {
@@ -102,7 +106,7 @@ fn main() {
                     exit(1);
                 }
             };
-        },
+        }
         Commands::Run { input } => {
             // Check if the input file exists
 
@@ -119,36 +123,36 @@ fn main() {
             };
 
             vcpu::run(file);
-        },
+        }
         Commands::OpcodeTable => {
             let hashmap = common::instruction::opcode::Instruction::hashmap();
 
             let mut table = String::from("|     ");
-    
+
             for i in 0x00..0x10 {
                 table += &format!("| 0x{:01X} ", i);
             }
-    
+
             table += "|\n";
-    
+
             for _ in 0x00..0x11 {
                 table += "| --- ";
             }
-    
+
             table += "|\n";
-    
+
             for i in 0x00..0x10 {
                 table += &format!("| 0x{:01X} ", i);
                 for j in 0x00..0x10 {
                     let mut get: Option<common::instruction::instructions::InstructionInfo> = None;
-    
+
                     for key in hashmap.keys().sorted() {
                         if key == &(((i << 4) | j) as u8) {
                             get = Some(hashmap[key]);
                             break;
                         }
                     }
-    
+
                     match get {
                         Some(value) => {
                             let value_type = match value.1 {
@@ -157,9 +161,13 @@ fn main() {
                                 AddressingMode::Direct => "A/L",
                                 AddressingMode::Discard => "",
                             };
-    
-                            table +=
-                                &format!("| 0x{:02X}<br/>{:?} {} ", (i << 4) | j, value.0, value_type);
+
+                            table += &format!(
+                                "| 0x{:02X}<br/>{:?} {} ",
+                                (i << 4) | j,
+                                value.0,
+                                value_type
+                            );
                         }
                         None => {
                             table += "|   ";
@@ -168,7 +176,7 @@ fn main() {
                 }
                 table += "|\n"
             }
-    
+
             match fs::write("opcodes.md", table) {
                 Ok(file) => file,
                 Err(error) => {
@@ -176,7 +184,7 @@ fn main() {
                     exit(1);
                 }
             };
-        },
+        }
         Commands::Instruction { instruction } => {
             let opcode = match Opcode::from_str(&instruction.to_lowercase()) {
                 Ok(val) => val,
@@ -188,14 +196,14 @@ fn main() {
                     exit(1);
                 }
             };
-    
+
             let variants = Instruction::get_variants(opcode);
-    
+
             println!(
                 "=== Opcode {:?} ===\nBinary: {:05b}\nHex: 0x{:01x}\nModes:",
                 opcode, opcode as u8, opcode as u8
             );
-    
+
             for mode in variants {
                 let final_opcode = Instruction::create_opcode(opcode, mode);
                 println!("    - {:?} ({:02b})", mode, mode as u8);
