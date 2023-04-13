@@ -1,8 +1,13 @@
 #![allow(unused_assignments)]
 
-use std::fs;
+use std::{
+    fs,
+    sync::{Arc, Mutex},
+    thread,
+};
 
 use crate::vcpu::cpu::Flags;
+use olc_pixel_game_engine as olc;
 
 pub mod cpu;
 pub mod device;
@@ -21,18 +26,31 @@ pub fn run(program: Vec<u8>) {
     println!("{:?}", program);
     let rom = device::rom::Rom::new(program, 0x0000);
     let ram = device::ram::Ram::new(0x8000, 0xFFFF);
+    let vga = Arc::new(Mutex::new(device::vga::VGA::new(0xA0000)));
+    let vga_scr = Arc::clone(&vga);
+    let mut screen = device::vga::Screen::new(vga_scr);
+
     let mut map = device::map::DeviceMap::new();
 
     map.add(ram);
     map.add(rom);
+    // map.add(vga);
 
     let mut cpu = cpu::CPU::new(map, 0x0000);
     cpu.sp = 0x8000;
-    let mut pins = cpu.pins;
+    let mut _pins = cpu.pins;
 
-    while cpu.running {
-        pins = cpu.tick(pins);
-    }
+    let vga_thread = thread::spawn(move || {
+        olc::start("YuCPU PC", &mut screen, 8 * 80, 14 * 25, 4, 4).unwrap();
+        cpu.running
+            .store(false, std::sync::atomic::Ordering::Release);
+    });
+
+    // while cpu.running.load(std::sync::atomic::Ordering::Relaxed) {
+    //     pins = cpu.tick(pins);
+    // }
+
+    vga_thread.join().unwrap();
 
     fs::write(
         "cpu_dump.txt",

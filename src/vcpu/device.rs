@@ -1,6 +1,7 @@
 pub mod map;
 pub mod ram;
 pub mod rom;
+pub mod vga;
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum DeviceResponse<T> {
@@ -8,6 +9,7 @@ pub enum DeviceResponse<T> {
     NotMyAddress,
     ReadOnly,
     WriteOnly,
+    InvalidAddress,
 }
 
 pub trait Device {

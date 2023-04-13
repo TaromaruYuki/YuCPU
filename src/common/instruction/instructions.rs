@@ -529,7 +529,8 @@ pub fn ret(cpu: &mut CPU) {
 }
 
 pub fn hlt(cpu: &mut CPU) {
-    cpu.running = false;
+    cpu.running
+        .store(false, std::sync::atomic::Ordering::Release);
 }
 
 pub fn nop(cpu: &mut CPU) {

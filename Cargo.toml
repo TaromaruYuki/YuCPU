@@ -11,6 +11,7 @@ clap = { version = "4.2.1", features = ["derive"] }
 colored = "2.0.0"
 itertools = "0.10.5"
 logos = "0.12.1"
+olc_pixel_game_engine = { git = "https://github.com/sadikovi/olcPixelGameEngine-rs.git", version = "0.5.0" }
 regex = "1.7.1"
 strum = "0.24.1"
 strum_macros = "0.24.3"
