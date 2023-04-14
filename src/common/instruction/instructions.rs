@@ -42,7 +42,7 @@ pub fn ld_register(cpu: &mut CPU) {
 
 pub fn ld_address(cpu: &mut CPU) {
     let address: u32 = if cpu.flags.contains(Flags::D) {
-        ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u32
+        u32::from_be_bytes([0x00, cpu.ad, ((cpu.dr & 0xFF00) >> 8) as u8, cpu.dr as u8])
     } else {
         cpu.dr as u32
     };
@@ -84,7 +84,7 @@ pub fn ldb_register(cpu: &mut CPU) {
 
 pub fn ldb_address(cpu: &mut CPU) {
     let address: u32 = if cpu.flags.contains(Flags::D) {
-        ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u32
+        u32::from_be_bytes([0x00, cpu.ad, ((cpu.dr & 0xFF00) >> 8) as u8, cpu.dr as u8])
     } else {
         cpu.dr as u32
     };
@@ -142,7 +142,7 @@ pub fn psh_register(cpu: &mut CPU) {
 
 pub fn psh_address(cpu: &mut CPU) {
     let address: u32 = if cpu.flags.contains(Flags::D) {
-        ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u32
+        u32::from_be_bytes([0x00, cpu.ad, ((cpu.dr & 0xFF00) >> 8) as u8, cpu.dr as u8])
     } else {
         cpu.dr as u32
     };
@@ -223,7 +223,7 @@ pub fn st_address(cpu: &mut CPU) {
     let value = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
 
     let address: u32 = if cpu.flags.contains(Flags::D) {
-        ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u32
+        u32::from_be_bytes([0x00, cpu.ad, ((cpu.dr & 0xFF00) >> 8) as u8, cpu.dr as u8])
     } else {
         cpu.dr as u32
     };
@@ -267,10 +267,12 @@ pub fn stl_address(cpu: &mut CPU) {
     let value = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) as u8;
 
     let address: u32 = if cpu.flags.contains(Flags::D) {
-        ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u32
+        u32::from_be_bytes([0x00, cpu.ad, ((cpu.dr & 0xFF00) >> 8) as u8, cpu.dr as u8])
     } else {
         cpu.dr as u32
     };
+
+    println!("Storing val {} in address {}", value, address);
 
     match cpu.map.write_byte(address, value) {
         DeviceMapResult::Ok(_) => (),
@@ -283,6 +285,22 @@ pub fn stl_address(cpu: &mut CPU) {
             }
         }
     };
+
+    println!(
+        "!!! byte: {}",
+        match cpu.map.read_byte(address) {
+            DeviceMapResult::Ok(val) => val,
+            DeviceMapResult::NoDevices =>
+                panic!("No devices attached. Could not write any values."),
+            DeviceMapResult::Error(err) => {
+                if err == DeviceResponse::ReadOnly {
+                    panic!("Device read only. Could not write value.");
+                } else {
+                    panic!("Unknown error. Could not write value.");
+                }
+            }
+        }
+    );
 
     cpu.advance();
 }
@@ -311,7 +329,7 @@ pub fn sth_address(cpu: &mut CPU) {
     let value = ((*cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8)) >> 8) as u8;
 
     let address: u32 = if cpu.flags.contains(Flags::D) {
-        ((cpu.dr << 4) | ((cpu.ad as u16) & 0xF)) as u32
+        u32::from_be_bytes([0x00, cpu.ad, ((cpu.dr & 0xFF00) >> 8) as u8, cpu.dr as u8])
     } else {
         cpu.dr as u32
     };
@@ -529,8 +547,7 @@ pub fn ret(cpu: &mut CPU) {
 }
 
 pub fn hlt(cpu: &mut CPU) {
-    cpu.running
-        .store(false, std::sync::atomic::Ordering::Release);
+    cpu.running = false;
 }
 
 pub fn nop(cpu: &mut CPU) {

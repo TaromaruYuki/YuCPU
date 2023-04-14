@@ -2,7 +2,7 @@
 
 use std::{
     fs,
-    sync::{Arc, Mutex},
+    sync::{atomic::AtomicBool, Arc, Mutex},
     thread,
 };
 
@@ -11,6 +11,10 @@ use olc_pixel_game_engine as olc;
 
 pub mod cpu;
 pub mod device;
+
+use self::device::vga::{CHAR_HEIGHT, CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH};
+
+const SCALE: i32 = 2;
 
 macro_rules! flag_value {
     ($flag_val:expr) => {
@@ -26,6 +30,7 @@ pub fn run(program: Vec<u8>) {
     println!("{:?}", program);
     let rom = device::rom::Rom::new(program, 0x0000);
     let ram = device::ram::Ram::new(0x8000, 0xFFFF);
+
     let vga = Arc::new(Mutex::new(device::vga::VGA::new(0xA0000)));
     let vga_scr = Arc::clone(&vga);
     let mut screen = device::vga::Screen::new(vga_scr);
@@ -34,21 +39,37 @@ pub fn run(program: Vec<u8>) {
 
     map.add(ram);
     map.add(rom);
-    // map.add(vga);
+    map.add(vga.lock().unwrap().to_owned());
 
+    let test = i32::from_be_bytes([0x00, 0x0a, 0x00, 0x01]);
+    println!("Test bytes: {}", test);
+
+    let running = Arc::new(AtomicBool::new(true));
+    let running_screen = Arc::clone(&running);
     let mut cpu = cpu::CPU::new(map, 0x0000);
     cpu.sp = 0x8000;
-    let mut _pins = cpu.pins;
+    let mut pins = cpu.pins;
 
     let vga_thread = thread::spawn(move || {
-        olc::start("YuCPU PC", &mut screen, 8 * 80, 14 * 25, 4, 4).unwrap();
-        cpu.running
-            .store(false, std::sync::atomic::Ordering::Release);
+        olc::start(
+            "YuCPU PC",
+            &mut screen,
+            CHAR_WIDTH * SCREEN_WIDTH,
+            CHAR_HEIGHT * SCREEN_HEIGHT,
+            SCALE,
+            SCALE,
+        )
+        .unwrap();
+        running_screen.store(false, std::sync::atomic::Ordering::Release);
     });
 
-    // while cpu.running.load(std::sync::atomic::Ordering::Relaxed) {
-    //     pins = cpu.tick(pins);
-    // }
+    while running.load(std::sync::atomic::Ordering::Acquire) {
+        pins = cpu.tick(pins);
+
+        if !cpu.running {
+            running.store(false, std::sync::atomic::Ordering::Release);
+        }
+    }
 
     vga_thread.join().unwrap();
 

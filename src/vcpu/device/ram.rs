@@ -21,7 +21,7 @@ impl Ram {
 }
 
 impl Device for Ram {
-    fn read(&mut self, addr: u32) -> DeviceResponse<u16> {
+    fn read(&self, addr: u32) -> DeviceResponse<u16> {
         if addr >= self.start && addr <= self.end {
             let data1 = (self.memory[self.relative(addr)] as u16) << 8;
             let data2 = self.memory[self.relative(addr + 1)] as u16;
@@ -32,7 +32,7 @@ impl Device for Ram {
         DeviceResponse::NotMyAddress
     }
 
-    fn read_byte(&mut self, addr: u32) -> DeviceResponse<u8> {
+    fn read_byte(&self, addr: u32) -> DeviceResponse<u8> {
         if addr >= self.start && addr <= self.end {
             return DeviceResponse::Ok(self.memory[self.relative(addr)]);
         }

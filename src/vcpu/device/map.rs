@@ -76,6 +76,7 @@ impl DeviceMap {
     }
 
     pub fn write(&mut self, addr: u32, value: u16) -> DeviceMapResult<()> {
+        println!("Writing to address {}", addr);
         for device in &mut self.devices {
             match device.write(addr, value) {
                 DeviceResponse::Ok(_) => (),

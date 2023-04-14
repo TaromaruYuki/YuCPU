@@ -71,7 +71,7 @@ impl Assembler {
                                 meta |= 0b0000_1000;
                                 output.push(meta);
                                 output.push(((addr & 0xF0000) >> 16) as u8);
-                                output.push(((addr & 0xFF00) >> 8) as u8);
+                                output.push(((addr & 0x0FF00) >> 8) as u8);
                                 output.push(*addr as u8);
                             }
                         }
@@ -120,10 +120,8 @@ impl Assembler {
                                     meta |= 0b0000_1000;
                                     output.push(meta);
                                     output.push(((addr & 0xF0000) >> 16) as u8);
-                                    output.push(((addr & 0xFF00) >> 8) as u8);
+                                    output.push(((addr & 0x0FF00) >> 8) as u8);
                                     output.push(*addr as u8);
-                                    println!("addr {:x}", *addr as u8);
-                                    // println!("!!! addr as u8 is {:x}", (*addr as u8) >> 4);
                                 }
                             }
                             InstructionArg::Identifier(ident) => {

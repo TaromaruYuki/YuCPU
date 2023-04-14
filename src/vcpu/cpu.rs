@@ -1,5 +1,3 @@
-use std::sync::{atomic::AtomicBool, Arc};
-
 use bitflags::bitflags;
 
 use crate::{common::instruction::opcode::InstructionError, vcpu::device::DeviceResponse};
@@ -67,7 +65,7 @@ pub struct CPU {
     pub is: u8,
     pub pins: Pins,
     pub map: DeviceMap,
-    pub running: Arc<AtomicBool>,
+    pub running: bool,
 }
 
 // Public Code
@@ -91,7 +89,7 @@ impl CPU {
             is: 0,
             pins: Pins::new(),
             map,
-            running: Arc::new(AtomicBool::new(true)),
+            running: true,
         }
     }
 }
