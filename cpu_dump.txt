@@ -1,8 +1,8 @@
-Program Counter: 0x0008
+Program Counter: 0x00b6
 Stack Pointer: 0x8000
 
 Register:
-    R1: 0x41
+    R1: 0x1f21
     R2: 0x00
     R3: 0x00
     R4: 0x00

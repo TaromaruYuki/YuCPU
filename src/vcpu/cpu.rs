@@ -196,16 +196,16 @@ impl CPU {
             },
         };
 
-        println!("Running {:?} with addr mode {:?}.", res.opcode, res.mode);
-        println!(
-            "Opcode {:08b} ir {} dr {} ad {}",
-            (mask & self.ir),
-            self.ir,
-            self.dr,
-            self.ad,
-        );
+        // println!("Running {:?} with addr mode {:?}.", res.opcode, res.mode);
+        // println!(
+        //     "Opcode {:08b} ir {} dr {} ad {}",
+        //     (mask & self.ir),
+        //     self.ir,
+        //     self.dr,
+        //     self.ad,
+        // );
 
-        println!("Executing instruction...");
+        // println!("Executing instruction...");
         (res.exec)(self);
 
         self.is = 0;

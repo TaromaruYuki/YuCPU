@@ -14,7 +14,7 @@ pub mod device;
 
 use self::device::vga::{CHAR_HEIGHT, CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH};
 
-const SCALE: i32 = 2;
+const SCALE: i32 = 1;
 
 macro_rules! flag_value {
     ($flag_val:expr) => {
@@ -28,8 +28,8 @@ macro_rules! flag_value {
 
 pub fn run(program: Vec<u8>) {
     println!("{:?}", program);
-    let rom = device::rom::Rom::new(program, 0x0000);
-    let ram = device::ram::Ram::new(0x8000, 0xFFFF);
+    let rom = Arc::new(Mutex::new(device::rom::Rom::new(program, 0x0000)));
+    let ram = Arc::new(Mutex::new(device::ram::Ram::new(0x8000, 0xFFFF)));
 
     let vga = Arc::new(Mutex::new(device::vga::VGA::new(0xA0000)));
     let vga_scr = Arc::clone(&vga);
@@ -39,7 +39,7 @@ pub fn run(program: Vec<u8>) {
 
     map.add(ram);
     map.add(rom);
-    map.add(vga.lock().unwrap().to_owned());
+    map.add(vga);
 
     let test = i32::from_be_bytes([0x00, 0x0a, 0x00, 0x01]);
     println!("Test bytes: {}", test);

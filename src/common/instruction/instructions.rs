@@ -272,7 +272,7 @@ pub fn stl_address(cpu: &mut CPU) {
         cpu.dr as u32
     };
 
-    println!("Storing val {} in address {}", value, address);
+    // println!("Storing val {} in address {}", value, address);
 
     match cpu.map.write_byte(address, value) {
         DeviceMapResult::Ok(_) => (),
@@ -285,22 +285,6 @@ pub fn stl_address(cpu: &mut CPU) {
             }
         }
     };
-
-    println!(
-        "!!! byte: {}",
-        match cpu.map.read_byte(address) {
-            DeviceMapResult::Ok(val) => val,
-            DeviceMapResult::NoDevices =>
-                panic!("No devices attached. Could not write any values."),
-            DeviceMapResult::Error(err) => {
-                if err == DeviceResponse::ReadOnly {
-                    panic!("Device read only. Could not write value.");
-                } else {
-                    panic!("Unknown error. Could not write value.");
-                }
-            }
-        }
-    );
 
     cpu.advance();
 }
