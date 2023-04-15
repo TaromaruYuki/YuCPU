@@ -1,16 +1,16 @@
-Program Counter: 0x00b6
-Stack Pointer: 0x8000
+Program Counter: 0x8025
+Stack Pointer: 0x0000
 
 Register:
-    R1: 0x1f21
-    R2: 0x00
-    R3: 0x00
-    R4: 0x00
+    R1: 0x100
+    R2: 0xa201
+    R3: 0xa200
+    R4: 0x1f
     R5: 0x00
     R6: 0x00
 
 Flags:
-    Zero: Off
+    Zero: On
     GT  : Off
     LT  : Off
     OvrF: Off

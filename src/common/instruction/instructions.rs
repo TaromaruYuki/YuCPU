@@ -353,7 +353,6 @@ fn compare(cpu: &mut CPU, val1: u16, val2: u16) {
 }
 
 pub fn cmp_immediate(cpu: &mut CPU) {
-    println!("!!! Decoding register {}", ((0xF0 & cpu.ir) >> 4) as u8);
     let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
     let val2 = cpu.dr;
 
@@ -445,8 +444,6 @@ pub fn jsr(cpu: &mut CPU) {
     } else {
         cpu.dr
     };
-
-    println!("!!! Jumped to $0x{:05x}", cpu.pc);
 }
 
 fn add(cpu: &mut CPU, val1: u16, val2: u16) -> u16 {

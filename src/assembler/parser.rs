@@ -403,7 +403,7 @@ impl Parser {
 
         self.current_token_index += 1;
 
-        let mut label = Label::new(label_name, self.label_offset);
+        let mut label = Label::new(label_name, self.label_offset + 0x8000);
 
         loop {
             if self.get_token().is_none() {

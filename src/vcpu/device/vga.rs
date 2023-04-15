@@ -237,7 +237,7 @@ impl Device for VGA {
         if addr >= self.start && addr <= self.end {
             let relative_addr = self.relative(addr);
 
-            println!("Relative addr: {}", relative_addr / 2);
+            // println!("Relative addr: {}", relative_addr / 2);
 
             if relative_addr % 2 == 0 {
                 // We are changing the color(s)
