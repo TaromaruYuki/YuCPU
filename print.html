@@ -190,10 +190,10 @@ Overflows (?)</li>
 <tr><td>General Purpose. 16 bits.</td><td>Program Counter. 16 bits.</td><td>Stack Pointer 16 bits.</td><td>Base Pointer. 16 bits.</td><td>Flag Register.</td></tr>
 </tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><h1 id="memory"><a class="header" href="#memory">Memory</a></h1>
-<p>The CPU uses 64kb of memory. The memory is layed out in the format shown.</p>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: center">General Purpose Memory</th><th style="text-align: center">Program Memory</th><th style="text-align: center">Stack</th></tr></thead><tbody>
-<tr><td style="text-align: center">40.959k</td><td style="text-align: center">16.384k</td><td style="text-align: center">8.191k</td></tr>
-<tr><td style="text-align: center">0x0000 - 0x9FFF</td><td style="text-align: center">0xA000 - 0xDFFF</td><td style="text-align: center">0xE000 - 0xFFFF</td></tr>
+<p>The CPU uses 64kb of memory. The memory map is in the format shown.</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: center">Interrupt Vector Table</th><th style="text-align: center">RAM</th><th style="text-align: center">ROM</th><th style="text-align: center">Stack</th></tr></thead><tbody>
+<tr><td style="text-align: center">1kb</td><td style="text-align: center">16kb</td><td style="text-align: center">1kb</td><td style="text-align: center">1kb</td></tr>
+<tr><td style="text-align: center">0x0000 - 0x0400</td><td style="text-align: center">0x0401 - 0x4401</td><td style="text-align: center">0x4402 - 0x4802</td><td style="text-align: center">0x4803 - 0x4C03</td></tr>
 </tbody></table>
 </div>
 <p>This layout can possibly change in the future due to new features and learning more about design.</p>
@@ -212,22 +212,22 @@ Overflows (?)</li>
 <p>The opcode table for the current design.</p>
 <p>V = Value | R = Register | A = Address | L = Label (Address)</p>
 <div class="table-wrapper"><table><thead><tr><th></th><th>0x0</th><th>0x1</th><th>0x2</th><th>0x3</th><th>0x4</th><th>0x5</th><th>0x6</th><th>0x7</th><th>0x8</th><th>0x9</th><th>0xA</th><th>0xB</th><th>0xC</th><th>0xD</th><th>0xE</th><th>0xF</th></tr></thead><tbody>
-<tr><td>0x0</td><td>00<br/>MOV V</td><td>01<br/>LD R</td><td>02<br/>LD A</td><td>03<br/>PSH V</td><td>04<br/>PSH R</td><td>05<br/>PSH A</td><td>06<br/>POP R</td><td>07<br/>POP</td><td>08<sup class="footnote-reference"><a href="#1">1</a></sup><br/>LDS A</td><td>09<br/>MOV R</td><td>0x0A<br/>MOV A/L</td><td>0x0B<br/>LDS R</td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x1</td><td>10<br/>ST A</td><td>11<br/>STL A</td><td>12<br/>STH A</td><td>13<br/> ST R</td><td>14<br/> STL R</td><td>15<br/> STH R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x2</td><td>20<br/>CMP R</td><td>21<br/>CMP V</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x3</td><td>30<br/>BEQ L</td><td>31<br/>BGT L</td><td>32<br/>BLT L</td><td>33<br/>JMP L</td><td>34<br/>BOF L</td><td>35<br/>BNE L</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x4</td><td>40<br/>ADD V</td><td>41<br/>SUB V</td><td>42<br/>ADD R</td><td>43<br/>SUB R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x5</td><td>50<br/>CALL L</td><td>51<br/>RET</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x0</td><td>0x00<br/>MOV V</td><td></td><td></td><td>0x03<br/>PSH V</td><td></td><td></td><td></td><td></td><td>0x08<br/>CMP V</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x1</td><td>0x10<br/>ADD V</td><td>0x11<br/>SUB V</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x4</td><td>0x40<br/>MOV R</td><td>0x41<br/>LD R</td><td>0x42<br/>LDB R</td><td>0x43<br/>PSH R</td><td>0x44<br/>POP R</td><td>0x45<br/>ST R</td><td>0x46<br/>STL R</td><td>0x47<br/>STH R</td><td>0x48<br/>CMP R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x5</td><td>0x50<br/>ADD R</td><td>0x51<br/>SUB R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x6</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x7</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x8</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x8</td><td></td><td>0x81<br/>LD A/L</td><td>0x82<br/>LDB A/L</td><td>0x83<br/>PSH A/L</td><td></td><td>0x85<br/>ST A/L</td><td>0x86<br/>STL A/L</td><td>0x87<br/>STH A/L</td><td></td><td>0x89<br/>BEQ A/L</td><td>0x8A<br/>BGT A/L</td><td>0x8B<br/>BLT A/L</td><td>0x8C<br/>BOF A/L</td><td>0x8D<br/>BNE A/L</td><td>0x8E<br/>JMP A/L</td><td>0x8F<br/>JSR A/L</td></tr>
 <tr><td>0x9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xA</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0xC</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0xD</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0xC</td><td></td><td></td><td></td><td></td><td>0xC4<br/>POP</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0xD</td><td></td><td></td><td>0xD2<br/>RET</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xE</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0xF</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>FE<br/>HLT</td><td>FF<br/>NOP</td></tr>
+<tr><td>0xF</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0xFE<br/>HLT</td><td>0xFF<br/>NOP</td></tr>
 </tbody></table>
 </div>
                     </main>
