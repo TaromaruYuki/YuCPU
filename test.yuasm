@@ -1,0 +1,33 @@
+.main start
+
+start:
+    mov r3, 0xA001    ; Load the address of VRAM in register 3
+    jsr topbarstart   ; Draw the top bar
+    hlt               ; End CPU execution
+
+topbarstart:
+    mov r1, 201       ; Character ╔
+    stl r1, r3        ; Store lower byte of register 1 in the address in register 3
+    add r3, 2         ; Increment address by 2
+
+    mov r2, 0         ; Initialize topbarmiddle's character count
+
+topbarmiddle:
+    mov r1, 205       ; Character ═
+    stl r1, r3        ; Store lower byte of register 1 in the address in register 3
+
+    add r2, 1         ; Increment counter
+    add r3, 2         ; Increment address by 2
+
+    cmp r2, 78        ; Check if we have hit 78 characters. 80 (Max horizontal characters) - 2 (The corner characters)
+
+    beq topbarend     ; Branch to topbarend if register 2 is equal to 78
+    jmp topbarmiddle  ; Loop back to the top
+
+topbarend:
+    mov r1, 187       ; Character ╗
+    stl r1, r3        ; Store lower byte of register 1 in the address in register 3
+
+    add r3, 2         ; Increment address by 2
+
+    ret               ; Return to previous label
