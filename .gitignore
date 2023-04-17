@@ -3,3 +3,4 @@ book
 # So you can stash and checkout from main/dev branch
 Cargo.lock
 target/
+.vscode/
