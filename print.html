@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="YuCPU.html"><strong aria-hidden="true">1.</strong> YuCPU</a></li><li class="spacer"></li><li class="chapter-item expanded "><a href="The_CPU.html"><strong aria-hidden="true">2.</strong> The CPU</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="The_CPU/registers.html"><strong aria-hidden="true">2.1.</strong> Registers</a></li><li class="chapter-item expanded "><a href="The_CPU/memory.html"><strong aria-hidden="true">2.2.</strong> Memory</a></li><li class="chapter-item expanded "><a href="The_CPU/flags.html"><strong aria-hidden="true">2.3.</strong> Flags</a></li><li class="chapter-item expanded "><a href="The_CPU/opcodes.html"><strong aria-hidden="true">2.4.</strong> Opcodes</a></li><li class="chapter-item expanded "><a href="The_CPU/bytecode.html"><strong aria-hidden="true">2.5.</strong> Bytecode</a></li></ol></li><li class="chapter-item expanded "><a href="Assembly.html"><strong aria-hidden="true">3.</strong> Assembly Language</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="Assembly/functions.html"><strong aria-hidden="true">3.1.</strong> Functions</a></li></ol></li><li class="chapter-item expanded "><a href="Instructions.html"><strong aria-hidden="true">4.</strong> Instructions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="Instructions/ADD.html"><strong aria-hidden="true">4.1.</strong> ADD</a></li><li class="chapter-item expanded "><a href="Instructions/Bxx.html"><strong aria-hidden="true">4.2.</strong> Bxx (Branch if xx)</a></li><li class="chapter-item expanded "><a href="Instructions/CALL.html"><strong aria-hidden="true">4.3.</strong> CALL</a></li><li class="chapter-item expanded "><a href="Instructions/CMP.html"><strong aria-hidden="true">4.4.</strong> CMP (CoMPare)</a></li><li class="chapter-item expanded "><a href="Instructions/HLT.html"><strong aria-hidden="true">4.5.</strong> HLT (HaLT)</a></li><li class="chapter-item expanded "><a href="Instructions/LD.html"><strong aria-hidden="true">4.6.</strong> LD (LoaD)</a></li><li class="chapter-item expanded "><a href="Instructions/LDS.html"><strong aria-hidden="true">4.7.</strong> LDS (LoaD Short)</a></li><li class="chapter-item expanded "><a href="Instructions/MOV.html"><strong aria-hidden="true">4.8.</strong> MOV (MoVe)</a></li><li class="chapter-item expanded "><a href="Instructions/NOP.html"><strong aria-hidden="true">4.9.</strong> NOP (NO oPeration)</a></li><li class="chapter-item expanded "><a href="Instructions/POP.html"><strong aria-hidden="true">4.10.</strong> POP</a></li><li class="chapter-item expanded "><a href="Instructions/PSH.html"><strong aria-hidden="true">4.11.</strong> PSH (PuSH)</a></li><li class="chapter-item expanded "><a href="Instructions/RET.html"><strong aria-hidden="true">4.12.</strong> RET (RETurn)</a></li><li class="chapter-item expanded "><a href="Instructions/STx.html"><strong aria-hidden="true">4.13.</strong> STx (STore xx)</a></li><li class="chapter-item expanded "><a href="Instructions/SUB.html"><strong aria-hidden="true">4.14.</strong> SUB</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="YuCPU.html"><strong aria-hidden="true">1.</strong> YuCPU</a></li><li class="spacer"></li><li class="chapter-item expanded "><a href="The_CPU.html"><strong aria-hidden="true">2.</strong> The CPU</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="The_CPU/registers.html"><strong aria-hidden="true">2.1.</strong> Registers</a></li><li class="chapter-item expanded "><a href="The_CPU/memory.html"><strong aria-hidden="true">2.2.</strong> Memory</a></li><li class="chapter-item expanded "><a href="The_CPU/flags.html"><strong aria-hidden="true">2.3.</strong> Flags</a></li><li class="chapter-item expanded "><a href="The_CPU/opcodes.html"><strong aria-hidden="true">2.4.</strong> Opcodes</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -198,11 +198,17 @@ Overflows (?)</li>
 </div>
 <p>This layout can possibly change in the future due to new features and learning more about design.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="flags"><a class="header" href="#flags">Flags</a></h1>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: center">N/A</th><th style="text-align: center">LT</th><th style="text-align: center">GT</th><th style="text-align: center">N/A</th><th style="text-align: center">N/A</th><th style="text-align: center">N/A</th><th style="text-align: center">OF</th><th style="text-align: center">EQ</th></tr></thead><tbody>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: center">D</th><th style="text-align: center">L</th><th style="text-align: center">G</th><th style="text-align: center">N/A</th><th style="text-align: center">N/A</th><th style="text-align: center">N/A</th><th style="text-align: center">O</th><th style="text-align: center">Z</th></tr></thead><tbody>
 </tbody></table>
 </div>
-<p>These flags get set with the <code>CMP</code> instruction, excluding the overflow flag. Overflow gets set when a register overflows due to a overflow using the <code>ADD</code> or <code>SUB</code> instructions.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="opcodes"><a class="header" href="#opcodes">Opcodes</a></h1>
+<ul>
+<li>D: Is the data a D-Word? (Deprecated after release 0.1.1)</li>
+<li>L: Less than (CMP)</li>
+<li>G: Greater than (CMP)</li>
+<li>O: Overflow (Arithmetic operations)</li>
+<li>Z: Zero (Eq on CMP)</li>
+</ul>
+<!-- These flags get set with the `CMP` instruction, excluding the overflow flag. Overflow gets set when a register overflows due to a overflow using the `ADD` or `SUB` instructions. --><div style="break-before: page; page-break-before: always;"></div><h1 id="opcodes"><a class="header" href="#opcodes">Opcodes</a></h1>
 <p>The opcode table for the current design.</p>
 <p>V = Value | R = Register | A = Address | L = Label (Address)</p>
 <div class="table-wrapper"><table><thead><tr><th></th><th>0x0</th><th>0x1</th><th>0x2</th><th>0x3</th><th>0x4</th><th>0x5</th><th>0x6</th><th>0x7</th><th>0x8</th><th>0x9</th><th>0xA</th><th>0xB</th><th>0xC</th><th>0xD</th><th>0xE</th><th>0xF</th></tr></thead><tbody>
@@ -222,221 +228,6 @@ Overflows (?)</li>
 <tr><td>0xD</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xE</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xF</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>FE<br/>HLT</td><td>FF<br/>NOP</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="bytecode"><a class="header" href="#bytecode">Bytecode</a></h1>
-<p>The format for the bytecode needed to run YuCPU programs is the following.</p>
-<div class="table-wrapper"><table><thead><tr><th>Header</th><th>Data</th><th>Text</th></tr></thead><tbody>
-<tr><td>Address to the start label (Text)</td><td>Data section (Strings)</td><td>Text section (Code)</td></tr>
-</tbody></table>
-</div>
-<p>Example program:</p>
-<pre><code>.main start
-
-.data
-
-@str1:
-	DAT &quot;String&quot;
-
-.text
-
-@start:
-	LD R1, 0
-	JMP count5
-
-@count5:
-	PSH R1
-	ADD R1, 1
-
-	CMP R1, 5
-	BEQ end
-
-	JMP count5
-
-@end:
-	HLT
-</code></pre>
-<p>Bytecode equivalent:</p>
-<pre><code>     00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
-0000 DA C8 53 74 72 69 6E 67 00 00 01 00 00 33 00 DA
-0010 D0 04 01 00 00 40 01 00 01 21 01 00 05 30 00 DA
-0020 E4 33 00 DA D0 FE FE FF FF
-</code></pre>
-<p>Explanation:</p>
-<ul>
-<li>Address 0x00 - 0x01: start label. Subtract the start of program memory to get the address realitve to the bytecode.
-<ul>
-<li>Doing this will show that the start function starts at 0x09</li>
-</ul>
-</li>
-<li>Address 0x02 - 0x08: Our string label. Encoded in ascii and automatically ends in 0x00. Translates to: &quot;String\0&quot;</li>
-<li>Address 0x09 - 0x28: Text section.
-<ul>
-<li><code>start</code> label starts at 0x09 and ends at 0x10. Only two instructions.</li>
-<li><code>count5</code> label starts at 0x11 and ends at 0x24. Ony five instructions.</li>
-<li><code>end</code> label starts at 0x25 and ends at 0x28. Only one instruction.</li>
-</ul>
-</li>
-</ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="assembly-language"><a class="header" href="#assembly-language">Assembly Language</a></h1>
-<p>The Assembly Language made for YuCPU is meant to be easier to use and understand compared to others.</p>
-<p>Registers are easy to identify, starting with the letter <code>R</code> and the register number. Accessing the <code>SP</code> and <code>PC</code> registers still use the <code>R</code> syntax. So <code>SP</code> would be <code>RSP</code> and <code>PC</code> would be <code>RPC</code>.</p>
-<p>Labels start with the <code>@</code> symbol, the name, and a <code>:</code> to end it off.</p>
-<p>Indention isn't necessary, but if you want to use it spaces cannot be used.</p>
-<p>Sections and metadata is defined with a <code>.</code> symbol. Two sections exist, <code>.data</code> and <code>.text</code>. <code>.data</code> for data already defined and <code>.text</code> for code. There's only one metadata and thats defining a start label, <code>.main</code>.</p>
-<p>Instructions are used in the way they are defined in <a href="../The_CPU/opcodes.html">Opcodes</a>, for example <code>LD</code>. Instructions are case sensitive. Most instructions have a register as a parameter, which is usually the value's output. Special cases can occur, like the <code>POP</code> instruction. Then it takes in a data type, the type also defined in <a href="../The_CPU/opcodes.html">Opcodes</a>.</p>
-<p>Instruction examples:</p>
-<p><code>LD R1, 5</code></p>
-<p><code>ADD R3, R2</code></p>
-<p>Special case instruction examples:</p>
-<p><code>POP</code></p>
-<p><code>POP R1</code></p>
-<p><code>HLT</code></p>
-<p>A example program can be found in <a href="../The_CPU/bytecode.html">Bytecode</a>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="functions"><a class="header" href="#functions">Functions</a></h1>
-<p>Functions in YuCPU's assembly is done in a specific way. This is comparable to other assembly's functions.</p>
-<ol>
-<li>Push arguments onto the stack, starting with the n'th arg then down to the 1st.</li>
-<li>Call the function, which will push the return addr onto the stack</li>
-<li>In the function, push the RBP onto the stack to return to it later.</li>
-<li>Move the RSP into RBP</li>
-<li>Get arguments as needed with the RBP.</li>
-</ol>
-<p>Example:</p>
-<pre><code>.main start
-
-.text
-
-@main:
-	PSH 3                           ; Argument 3
-	PSH 2                           ; Argument 2
-	PSH 1                           ; Argument 1
-
-	CALL add3
-
-	POP                             ; Pop arguments
-	POP
-	POP
-
-	HLT ; Halt CPU
-
-@add3:
-	PSH RBP
-	MOV RBP, RSP
-
-	SUB RBP, 6
-	LD R1, RBP                      ; Argument 1
-
-	SUB RBP, 2
-	LD R2, RBP                      ; Argument 2
-
-	SUB RBP, 2
-	LD R3, RBP                      ; Argument 3
-
-	ADD RBP, 10                     ; Reset Base Pointer
-
-	...                             ; Code here
-
-	POP RBP                         ; Restore Base Pointer
-
-	RET                             ; Return to start
-</code></pre>
-<p><code>add3</code> is the function. We give it 1, 2, and 3 as a parameter.</p>
-<p>A equivalent to this in C would be:</p>
-<pre><code class="language-c">void add3(short a, short b, short c) {
-    // Code here
-}
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="instructions-1"><a class="header" href="#instructions-1">Instructions</a></h1>
-<p>This section is to show information about the instructions present in YuCPU.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="add-add"><a class="header" href="#add-add">ADD (Add)</a></h1>
-<p>This instruction adds the destination and source numbers together. The result is stored inside the destination. Operands are assumed signed. A overflow flag is set if the result is bigger than 0xFFFF.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>ADD dest, operand</td><td>ADD R4, 10</td><td>Adds dest &amp; operand's value</td><td>0x40</td><td>0x40 DEST VAL_HI VAL_LO</td></tr>
-<tr><td>ADD dest, register</td><td>ADD R1, R3</td><td>Adds dest &amp; register's value.</td><td>0x42</td><td>0x42 DEST 0x00 REG</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="bxx-branch-if-xx"><a class="header" href="#bxx-branch-if-xx">Bxx (Branch if xx)</a></h1>
-<p>This instruction branches if a specific flag is set. </p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>BEQ label</td><td>BEQ foo</td><td>Branches if the EQ flag is set</td><td>0x30</td><td>0x30 0x00 ADDR_HI ADDR_LO</td></tr>
-<tr><td>BGT label</td><td>BGT foo</td><td>Branches if the GT flag is set</td><td>0x31</td><td>0x31 0x00 ADDR_HI ADDR_LO</td></tr>
-<tr><td>BLT label</td><td>BLT foo</td><td>Branches if the LT flag is set</td><td>0x32</td><td>0x32 0x00 ADDR_HI ADDR_LO</td></tr>
-<tr><td>BOF label</td><td>BOF foo</td><td>Branches if the OF flag is set</td><td>0x34</td><td>0x34 0x00 ADDR_HI ADDR_LO</td></tr>
-<tr><td>BNE label</td><td>BNE foo</td><td>Branches if the EQ flag is NOT set</td><td>0x35</td><td>0x35 0x00 ADDR_HI ADDR_LO</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="call"><a class="header" href="#call">CALL</a></h1>
-<p>This instruction calls a function. This pushes the current program counter register + 4 as a return address to the stack and increments the stack pointer + 2.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>CALL label</td><td>CALL foo</td><td>Calls and pushes the return addr</td><td>0x50</td><td>0x50 0x00 ADDR_HI ADDR_LO</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="cmp-compare"><a class="header" href="#cmp-compare">CMP (CoMPare)</a></h1>
-<p>This instruction compares reg1 and a value / reg2. It sets the GT, LT, or EQ flag if the result is true.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>CMP reg1, reg2</td><td>CMP R1, R3</td><td>Compares reg1 &amp; reg2's value.</td><td>0x20</td><td>0x20 REG1 0x00 REG2</td></tr>
-<tr><td>CMP reg1, operand</td><td>CMP R4, 57</td><td>Compares dest &amp; operand's value.</td><td>0x21</td><td>0x20 REG1 VAL_HI VAL_LO</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="hlt-halt"><a class="header" href="#hlt-halt">HLT (HaLT)</a></h1>
-<p>This instruction halts the CPU. No more instructions are read.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>HLT</td><td>HLT</td><td>Halts the CPU</td><td>0xFE</td><td>0xFE 0xFE 0xFF 0xFF</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="ld-load"><a class="header" href="#ld-load">LD (LoaD)</a></h1>
-<p>Loads a byte into a register from memory.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>LD dest, reg</td><td>LD R1, R6</td><td>Loads reg's byte in mem into dest.</td><td>0x01</td><td>0x01 DEST 0x00 REG</td></tr>
-<tr><td>LD dest, addr</td><td>LD R2, $0x1234</td><td>Loads addr's byte in mem into dest.</td><td>0x02</td><td>0x02 DEST ADDR_HI ADDR_LO</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="lds-load-short"><a class="header" href="#lds-load-short">LDS (LoaD Short)</a></h1>
-<p>Loads a short into a register from memory.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>LDS dest, reg</td><td>LDS R1, R6</td><td>Loads reg's short in mem into dest.</td><td>0x0B</td><td>0x0B DEST 0x00 REG</td></tr>
-<tr><td>LDS dest, addr</td><td>LDS R2, $0x1234</td><td>Loads addr's short in mem into dest.</td><td>0x08</td><td>0x08 DEST ADDR_HI ADDR_LO</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="mov-move"><a class="header" href="#mov-move">MOV (MoVe)</a></h1>
-<p>&quot;Moves&quot; (Copies) a value into a register.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>MOV dest, val</td><td>MOV R2, 0x1234</td><td>Moves val into dest.</td><td>0x00</td><td>0x00 DEST VAL_HI VAL_LO</td></tr>
-<tr><td>MOV dest, reg</td><td>MOV R1, R6</td><td>Moves reg's val into dest.</td><td>0x09</td><td>0x0B DEST 0x00 REG</td></tr>
-<tr><td>MOV dest, addr</td><td>MOV R2, $0x1234</td><td>Moves addr into dest.</td><td>0x0A</td><td>0x08 DEST ADDR_HI ADDR_LO</td></tr>
-<tr><td>MOV dest, label</td><td>MOV R2, foo</td><td>Moves labels addr into dest.</td><td>0x0A</td><td>0x08 DEST ADDR_HI ADDR_LO</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="nop-no-operation"><a class="header" href="#nop-no-operation">NOP (NO oPeration)</a></h1>
-<p>This instruction does nothing. No operation.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>NOP</td><td>NOP</td><td>Nothing.</td><td>0xFF</td><td>0xFF 0xFF 0xFF 0xFF</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="pop"><a class="header" href="#pop">POP</a></h1>
-<p>Pops a value from the stack. Optionally returns the value to a register.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>POP reg</td><td>ADD R1</td><td>Pops a value and stores it.</td><td>0x06</td><td>0x06 REG 0x00 0x00</td></tr>
-<tr><td>POP</td><td>POP</td><td>Pops a value and discards it.</td><td>0x07</td><td>0x40 0x00 0x00 0x00</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="psh-push"><a class="header" href="#psh-push">PSH (PuSH)</a></h1>
-<p>Pushes a value onto the stack and increments the stack pointer + 2.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>PSH val</td><td>PSH 0x1234</td><td>Pushes val onto stack.</td><td>0x03</td><td>0x00 0x00 VAL_HI VAL_LO</td></tr>
-<tr><td>PSH reg</td><td>PSH R6</td><td>Pushes reg's val onto stack.</td><td>0x04</td><td>0x0B REG 0x00 0x00</td></tr>
-<tr><td>PSH addr</td><td>PSH $0x1234</td><td>Reads addr and pushes value.</td><td>0x05</td><td>0x08 0x00 ADDR_HI ADDR_LO</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="ret-return"><a class="header" href="#ret-return">RET (RETurn)</a></h1>
-<p>Returns from the function. Pops the return value off the stack and sets the program counter to the address.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>RET</td><td>RET</td><td>Returns from function</td><td>0x51</td><td>0x51 0x00 0x00 0x00</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="stx-store-xx"><a class="header" href="#stx-store-xx">STx (STore xx)</a></h1>
-<p>Stores a short into memory. Also can store the hi byte and lo byte of a value. Register is the value.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>ST val, addr</td><td>ST R2, $0x1234</td><td>Stores val into addr.</td><td>0x10</td><td>0x10 VAL ADDR_HI ADDR_LO</td></tr>
-<tr><td>ST val, reg</td><td>ST R1, R6</td><td>Stores val into reg's addr.</td><td>0x13</td><td>0x13 VAL 0x00 REG</td></tr>
-<tr><td>STL val, addr</td><td>STL R2, $0x1234</td><td>Stores val lo byte into addr.</td><td>0x11</td><td>0x11 VAL ADDR_HI ADDR_LO</td></tr>
-<tr><td>STL val, reg</td><td>STL R1, R6</td><td>Stores val lo byte into reg's addr.</td><td>0x14</td><td>0x14 VAL 0x00 REG</td></tr>
-<tr><td>STH val, addr</td><td>STH R2, $0x1234</td><td>Stores val hi byte into addr.</td><td>0x12</td><td>0x12 VAL ADDR_HI ADDR_LO</td></tr>
-<tr><td>STH val, reg</td><td>STH R1, R6</td><td>Stores val hi byte into reg's addr.</td><td>0x15</td><td>0x15 VAL 0x00 REG</td></tr>
-</tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="sub-subtract"><a class="header" href="#sub-subtract">SUB (Subtract)</a></h1>
-<p>This instruction subtracts the destination and source numbers together. The result is stored inside the destination. Operands are assumed unsigned. No flags are set yet for going below 0x00, just a panic.</p>
-<div class="table-wrapper"><table><thead><tr><th>Instruction</th><th>Example</th><th>Function</th><th>Opcode</th><th>Bytecode</th></tr></thead><tbody>
-<tr><td>SUB dest, operand</td><td>SUB R4, 10</td><td>Subs dest &amp; operand's value</td><td>0x41</td><td>0x41 DEST VAL_HI VAL_LO</td></tr>
-<tr><td>SUB dest, register</td><td>SUB R1, R3</td><td>Subs dest &amp; register's value.</td><td>0x43</td><td>0x43 DEST 0x00 REG</td></tr>
 </tbody></table>
 </div>
                     </main>
