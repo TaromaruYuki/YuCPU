@@ -9,10 +9,10 @@
     - [Memory](./The_CPU/memory.md)
     - [Flags](./The_CPU/flags.md)
     - [Opcodes](./The_CPU/opcodes.md)
-    - [Bytecode](./The_CPU/bytecode.md)
-- [Assembly Language](./Assembly.md)
+    <!-- - [Bytecode](./The_CPU/bytecode.md) -->
+<!-- - [Assembly Language](./Assembly.md) -->
     - [Functions](./Assembly/functions.md)
-- [Instructions](./Instructions.md)
+<!-- - [Instructions](./Instructions.md) -->
     - [ADD](./Instructions/ADD.md)
     - [Bxx (Branch if xx)](./Instructions/Bxx.md)
     - [CALL](./Instructions/CALL.md)
