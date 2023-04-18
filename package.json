@@ -1,0 +1,25 @@
+{
+  "name": "yucpu",
+  "displayName": "YuCPU",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.77.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "yucpu",
+      "aliases": ["YuCPU ASM", "yucpu"],
+      "extensions": [".yucpu"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "yucpu",
+      "scopeName": "source.yucpu",
+      "path": "./syntaxes/yucpu.tmLanguage.json"
+    }]
+  }
+}

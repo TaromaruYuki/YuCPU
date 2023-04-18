@@ -1,0 +1,74 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "YuCPU ASM",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#constants"
+		},
+		{
+			"include": "#functions"
+		},
+		{
+			"include": "#entities"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.yucpu",
+				"match": "\\b((r|R)([1-6]|(pc|PC)|(sp|SP)|(bp|BP)))\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.yucpu",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.yucpu",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"name": "comment.line.equals-sign.yucpu",
+			"begin": ";",
+			"end": "\n"
+		},
+		"constants": {
+			"patterns": [
+				{
+					"name": "constant.numeric.yucpu",
+					
+					"match": "([$]?0x[0-9a-fA-F]*|0x[0-9a-fA-F]*|[0-9]+)"
+				}
+			]
+		},
+		"functions": {
+			"patterns": [
+				{
+					"name": "support.function.dasm-asm",
+					"match": "(?x)\n  (?<!\\.) \\b((mov|MOV)|(psh|PSH)|(cmp|CMP)|(add|ADD)|(sub|SUB)|(ld|LD)|(ldb|LDB)|(pop|POP)|(st|ST)|(stl|STL)|(sth|STH)|(beq|BEQ)|(bgt|BGT)|(blt|BLT)|(bof|BOF)|(bne|BNE)|(jmp|JMP)|(jsr|JSR)|(ret|RET)|(hlt|HLT)|(nop|NOP))\\b\n"
+				}
+			]
+		},
+		"entities": {
+			"patterns": [
+				{
+					"name": "entity.name.section",
+					"match": "\\.main"
+				}
+			]
+		}
+	},
+	"scopeName": "source.yucpu"
+}
