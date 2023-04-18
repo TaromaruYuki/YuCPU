@@ -166,7 +166,7 @@ pub struct VGA {
 impl VGA {
     pub fn new(start: u32) -> Self {
         #[allow(unused_mut)]
-        let mut mem = vec![VGACharacter::default(); 0x10000];
+        let mut mem = vec![VGACharacter::default(); (SCREEN_WIDTH * SCREEN_HEIGHT) as usize];
         // for (i, char) in "Hello, world!".chars().into_iter().enumerate() {
         //     mem[i].character = char as u8;
         // }
@@ -174,7 +174,7 @@ impl VGA {
         Self {
             memory: mem,
             start,
-            end: start + 0x10000,
+            end: start + (SCREEN_WIDTH * SCREEN_HEIGHT * 2) as u32,
         }
     }
 
@@ -265,7 +265,17 @@ impl Device for VGA {
         String::from("VGA")
     }
 
-    fn get_memory(&self) -> &Vec<u8> {
-        todo!()
+    fn set_name(&mut self, _name: String) {
+        panic!("set_name should not be called for VGA.");
+    }
+
+    fn get_memory(&self) -> Vec<u8> {
+        let mut temp: Vec<u8> = Vec::new();
+
+        for character in &self.memory {
+            temp.append(&mut character.bytes().to_vec());
+        }
+
+        temp
     }
 }

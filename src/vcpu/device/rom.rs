@@ -63,7 +63,11 @@ impl Device for Rom {
         String::from("ROM")
     }
 
-    fn get_memory(&self) -> &Vec<u8> {
-        &self.memory
+    fn set_name(&mut self, _name: String) {
+        panic!("set_name should not be called for ROM.")
+    }
+
+    fn get_memory(&self) -> Vec<u8> {
+        self.memory.clone()
     }
 }

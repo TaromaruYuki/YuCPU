@@ -1,3 +1,5 @@
+use std::fs;
+
 use bitflags::bitflags;
 
 use crate::{common::instruction::opcode::InstructionError, vcpu::device::DeviceResponse};
@@ -45,6 +47,12 @@ impl Default for Pins {
     fn default() -> Self {
         Self::new()
     }
+}
+
+pub enum Dump {
+    All,
+    Memory,
+    Stats,
 }
 
 #[allow(clippy::upper_case_acronyms)]
@@ -234,5 +242,76 @@ impl CPU {
             8 => &mut self.bp,
             _ => panic!("Invalid register"),
         };
+    }
+
+    pub fn dump(&self, dump_type: Dump) {
+        match dump_type {
+            Dump::All => {
+                self.dump_memory();
+                self.dump_stats();
+            }
+            Dump::Memory => self.dump_memory(),
+            Dump::Stats => self.dump_stats(),
+        }
+    }
+
+    fn dump_stats(&self) {
+        macro_rules! flag_value {
+            ($flag_val:expr) => {
+                if $flag_val {
+                    "On"
+                } else {
+                    "Off"
+                }
+            };
+        }
+
+        fs::write(
+            "debug/dump.txt",
+            format!(
+                "Program Counter: 0x{:04x}
+Stack Pointer: 0x{:04x}
+
+Register:
+    R1: 0x{:02x}
+    R2: 0x{:02x}
+    R3: 0x{:02x}
+    R4: 0x{:02x}
+    R5: 0x{:02x}
+    R6: 0x{:02x}
+
+Flags:
+    Zero: {}
+    GT  : {}
+    LT  : {}
+    OvrF: {}
+    DWord: {}",
+                self.pc,
+                self.sp,
+                self.r1,
+                self.r2,
+                self.r3,
+                self.r4,
+                self.r5,
+                self.r6,
+                flag_value!(self.flags.contains(Flags::Z)),
+                flag_value!(self.flags.contains(Flags::G)),
+                flag_value!(self.flags.contains(Flags::L)),
+                flag_value!(self.flags.contains(Flags::O)),
+                flag_value!(self.flags.contains(Flags::D)),
+            ),
+        )
+        .unwrap();
+    }
+
+    fn dump_memory(&self) {
+        for device in &self.map.devices {
+            let dev_lock = device.lock().unwrap();
+            fs::write(
+                format!("debug/memory/{}.bin", dev_lock.get_name()),
+                dev_lock.get_memory(),
+            )
+            .unwrap();
+        }
     }
 }

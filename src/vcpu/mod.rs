@@ -1,37 +1,29 @@
 #![allow(unused_assignments)]
 
 use std::{
-    fs,
     sync::{atomic::AtomicBool, Arc, Mutex},
     thread,
 };
 
-use crate::vcpu::cpu::Flags;
 use olc_pixel_game_engine as olc;
 
 pub mod cpu;
 pub mod device;
 
-use self::device::vga::{CHAR_HEIGHT, CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH};
+use self::{device::{vga::{CHAR_HEIGHT, CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH}, Device}, cpu::Dump};
 
 const SCALE: i32 = 1;
-
-macro_rules! flag_value {
-    ($flag_val:expr) => {
-        if $flag_val {
-            "On"
-        } else {
-            "Off"
-        }
-    };
-}
 
 pub fn run(program: Vec<u8>) {
     // println!("{:?}", program);
     let ivt = Arc::new(Mutex::new(device::ram::Ram::new(0x0000, 0x0400)));
+    {let mut l = ivt.lock().unwrap(); l.set_name(String::from("IVT")); }
+
     let ram = Arc::new(Mutex::new(device::ram::Ram::new(0x0401, 0x4401)));
     let rom = Arc::new(Mutex::new(device::rom::Rom::new(program, 0x4402, 0x400)));
+    
     let stack = Arc::new(Mutex::new(device::ram::Ram::new(0x4803, 0x4C03)));
+    {let mut l = ivt.lock().unwrap(); l.set_name(String::from("Stack")); }
 
     let vga = Arc::new(Mutex::new(device::vga::VGA::new(0xA000)));
     let vga_scr = Arc::clone(&vga);
@@ -74,42 +66,5 @@ pub fn run(program: Vec<u8>) {
 
     vga_thread.join().unwrap();
 
-    fs::write(
-        "cpu_dump.txt",
-        format!(
-            "Program Counter: 0x{:04x}
-Stack Pointer: 0x{:04x}
-
-Register:
-    R1: 0x{:02x}
-    R2: 0x{:02x}
-    R3: 0x{:02x}
-    R4: 0x{:02x}
-    R5: 0x{:02x}
-    R6: 0x{:02x}
-
-Flags:
-    Zero: {}
-    GT  : {}
-    LT  : {}
-    OvrF: {}
-    DWord: {}
-
-Memory dump: 'memory.bin'",
-            cpu.pc,
-            cpu.sp,
-            cpu.r1,
-            cpu.r2,
-            cpu.r3,
-            cpu.r4,
-            cpu.r5,
-            cpu.r6,
-            flag_value!(cpu.flags.contains(Flags::Z)),
-            flag_value!(cpu.flags.contains(Flags::G)),
-            flag_value!(cpu.flags.contains(Flags::L)),
-            flag_value!(cpu.flags.contains(Flags::O)),
-            flag_value!(cpu.flags.contains(Flags::D)),
-        ),
-    )
-    .unwrap();
+    cpu.dump(Dump::All);
 }

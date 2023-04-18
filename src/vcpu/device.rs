@@ -18,5 +18,6 @@ pub trait Device {
     fn write(&mut self, addr: u32, value: u16) -> DeviceResponse<()>;
     fn write_byte(&mut self, addr: u32, value: u8) -> DeviceResponse<()>;
     fn get_name(&self) -> String;
-    fn get_memory(&self) -> &Vec<u8>;
+    fn set_name(&mut self, name: String);
+    fn get_memory(&self) -> Vec<u8>;
 }

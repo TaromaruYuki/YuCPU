@@ -4,6 +4,7 @@ pub struct Ram {
     pub memory: Vec<u8>,
     start: u32,
     end: u32,
+    name: String
 }
 
 impl Ram {
@@ -12,6 +13,7 @@ impl Ram {
             memory: vec![0; (end - start) as usize],
             start,
             end,
+            name: String::from("RAM"),
         }
     }
 
@@ -69,10 +71,14 @@ impl Device for Ram {
     }
 
     fn get_name(&self) -> String {
-        String::from("RAM")
+        self.name.clone()
     }
 
-    fn get_memory(&self) -> &Vec<u8> {
-        &self.memory
+    fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    fn get_memory(&self) -> Vec<u8> {
+        self.memory.clone()
     }
 }

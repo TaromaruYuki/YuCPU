@@ -252,7 +252,7 @@ pub fn stl_register(cpu: &mut CPU) {
 
     match cpu.map.write_byte(address, value) {
         DeviceMapResult::Ok(_) => (),
-        DeviceMapResult::NoDevices => panic!("No devices attached. Could not write any values."),
+        DeviceMapResult::NoDevices => panic!("No devices attached. Could not write any values to address 0x{:x}.", address),
         DeviceMapResult::Error(err) => {
             if err == DeviceResponse::ReadOnly {
                 panic!("Device read only. Could not write value.");
