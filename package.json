@@ -13,7 +13,7 @@
     "languages": [{
       "id": "yucpu",
       "aliases": ["YuCPU ASM", "yucpu"],
-      "extensions": [".yucpu"],
+      "extensions": [".yuasm"],
       "configuration": "./language-configuration.json"
     }],
     "grammars": [{
