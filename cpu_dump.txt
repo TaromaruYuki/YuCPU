@@ -1,13 +1,13 @@
-Program Counter: 0x8025
-Stack Pointer: 0x0000
+Program Counter: 0x44dc
+Stack Pointer: 0x4803
 
 Register:
-    R1: 0x100
-    R2: 0xa201
-    R3: 0xa200
-    R4: 0x1f
+    R1: 0xbc
+    R2: 0x4e
+    R3: 0xafa1
+    R4: 0x00
     R5: 0x00
-    R6: 0x00
+    R6: 0xbc
 
 Flags:
     Zero: On

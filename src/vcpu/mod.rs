@@ -14,7 +14,7 @@ pub mod device;
 
 use self::device::vga::{CHAR_HEIGHT, CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH};
 
-const SCALE: i32 = 2;
+const SCALE: i32 = 1;
 
 macro_rules! flag_value {
     ($flag_val:expr) => {
@@ -28,8 +28,10 @@ macro_rules! flag_value {
 
 pub fn run(program: Vec<u8>) {
     // println!("{:?}", program);
-    let rom = Arc::new(Mutex::new(device::rom::Rom::new(program, 0x8000)));
-    let ram = Arc::new(Mutex::new(device::ram::Ram::new(0x0000, 0x7FFF)));
+    let ivt = Arc::new(Mutex::new(device::ram::Ram::new(0x0000, 0x0400)));
+    let ram = Arc::new(Mutex::new(device::ram::Ram::new(0x0401, 0x4401)));
+    let rom = Arc::new(Mutex::new(device::rom::Rom::new(program, 0x4402, 0x400)));
+    let stack = Arc::new(Mutex::new(device::ram::Ram::new(0x4803, 0x4C03)));
 
     let vga = Arc::new(Mutex::new(device::vga::VGA::new(0xA000)));
     let vga_scr = Arc::clone(&vga);
@@ -38,13 +40,15 @@ pub fn run(program: Vec<u8>) {
     let mut map = device::map::DeviceMap::new();
 
     map.add(vga);
+    map.add(ivt);
     map.add(ram);
     map.add(rom);
+    map.add(stack);
 
     let running = Arc::new(AtomicBool::new(true));
     let running_screen = Arc::clone(&running);
-    let mut cpu = cpu::CPU::new(map, 0x8000);
-    cpu.sp = 0x0000;
+    let mut cpu = cpu::CPU::new(map, 0x4402);
+    cpu.sp = 0x4803;
     let mut pins = cpu.pins;
 
     let vga_thread = thread::spawn(move || {

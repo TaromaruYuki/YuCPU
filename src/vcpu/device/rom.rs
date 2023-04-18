@@ -7,7 +7,11 @@ pub struct Rom {
 }
 
 impl Rom {
-    pub fn new(memory: Vec<u8>, start: u32) -> Rom {
+    pub fn new(memory: Vec<u8>, start: u32, limit: u32) -> Rom {
+        if memory.len() > limit as usize {
+            panic!("Program too large to fit in ROM");
+        }
+
         Rom {
             start,
             end: (memory.len() as u32) + start - 1,

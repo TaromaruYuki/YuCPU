@@ -191,7 +191,7 @@ impl CPU {
             Ok(data) => data,
             Err(error) => match error {
                 InstructionError::InvalidOpcode => {
-                    panic!("Invalid opcode: {}", &(((mask & self.ir) >> 8) as u8))
+                    panic!("Invalid opcode: 0x{:x}", &(((mask & self.ir) >> 8) as u8))
                 }
             },
         };
@@ -217,6 +217,7 @@ impl CPU {
 
     pub fn advance(&mut self) {
         self.pc += self.is as u16;
+        // println!("Advanced");
     }
 
     #[allow(unused_variables, clippy::needless_return)]

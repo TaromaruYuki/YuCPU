@@ -16,6 +16,7 @@ impl Ram {
     }
 
     fn relative(&self, addr: u32) -> usize {
+        // println!("{:x} is {:x}", addr, (addr - self.start));
         (addr - self.start) as usize
     }
 }

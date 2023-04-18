@@ -22,7 +22,6 @@ pub fn mov_register(cpu: &mut CPU) {
 
 pub fn ld_register(cpu: &mut CPU) {
     let address = *cpu.decode_register(cpu.dr as u8);
-    println!("Address: {}", address);
 
     let res = match cpu.map.read(address as u32) {
         DeviceMapResult::Ok(res) => res,
@@ -106,6 +105,7 @@ pub fn ldb_address(cpu: &mut CPU) {
 }
 
 pub fn psh_immediate(cpu: &mut CPU) {
+    println!("Pushing 0x{:x} at address 0x{:x}", cpu.dr, cpu.sp);
     match cpu.map.write(cpu.sp as u32, cpu.dr) {
         DeviceMapResult::Ok(_) => (),
         DeviceMapResult::NoDevices => panic!("No devices attached. Could not write any values."),
@@ -124,6 +124,8 @@ pub fn psh_immediate(cpu: &mut CPU) {
 
 pub fn psh_register(cpu: &mut CPU) {
     let value = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
+    // println!("Register {} = {}", ((0xF0 & cpu.ir) >> 4) as u8, value);
+    // println!("Pushing at address 0x{:X}", cpu.sp);
     match cpu.map.write(cpu.sp as u32, value) {
         DeviceMapResult::Ok(_) => (),
         DeviceMapResult::NoDevices => panic!("No devices attached. Could not write any values."),

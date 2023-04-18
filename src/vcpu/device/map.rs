@@ -80,7 +80,6 @@ impl DeviceMap {
     }
 
     pub fn write(&mut self, addr: u32, value: u16) -> DeviceMapResult<()> {
-        println!("Writing to address {}", addr);
         for device in &mut self.devices {
             let mut dev = device.lock().unwrap();
             match dev.write(addr, value) {
