@@ -40,7 +40,7 @@
 			]
 		},
 		"comments": {
-			"name": "comment.line.equals-sign.yucpu",
+			"name": "comment.line.yucpu",
 			"begin": ";",
 			"end": "\n"
 		},
@@ -48,7 +48,6 @@
 			"patterns": [
 				{
 					"name": "constant.numeric.yucpu",
-					
 					"match": "([$]?0x[0-9a-fA-F]*|0x[0-9a-fA-F]*|[0-9]+)"
 				}
 			]
@@ -57,7 +56,7 @@
 			"patterns": [
 				{
 					"name": "support.function.dasm-asm",
-					"match": "(?x)\n  (?<!\\.) \\b((mov|MOV)|(psh|PSH)|(cmp|CMP)|(add|ADD)|(sub|SUB)|(ld|LD)|(ldb|LDB)|(pop|POP)|(st|ST)|(stl|STL)|(sth|STH)|(beq|BEQ)|(bgt|BGT)|(blt|BLT)|(bof|BOF)|(bne|BNE)|(jmp|JMP)|(jsr|JSR)|(ret|RET)|(hlt|HLT)|(nop|NOP))\\b\n"
+					"match": "(?x)\n  (?<!\\.) \\b((mov|MOV)|(psh|PSH)|(cmp|CMP)|(add|ADD)|(sub|SUB)|(ld|LD)|(ldb|LDB)|(pop|POP)|(st|ST)|(stl|STL)|(sth|STH)|(beq|BEQ)|(bgt|BGT)|(blt|BLT)|(bof|BOF)|(bne|BNE)|(jmp|JMP)|(jsr|JSR)|(ret|RET)|(int|INT)|(rei|REI)|(hlt|HLT)|(nop|NOP))\\b\n"
 				}
 			]
 		},
@@ -65,7 +64,7 @@
 			"patterns": [
 				{
 					"name": "entity.name.section",
-					"match": "\\.main"
+					"match": "\\.(main|int)"
 				}
 			]
 		}
