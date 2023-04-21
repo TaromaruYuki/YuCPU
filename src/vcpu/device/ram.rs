@@ -4,7 +4,7 @@ pub struct Ram {
     pub memory: Vec<u8>,
     start: u32,
     end: u32,
-    name: String
+    name: String,
 }
 
 impl Ram {

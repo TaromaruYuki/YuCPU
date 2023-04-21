@@ -10,21 +10,34 @@ use olc_pixel_game_engine as olc;
 pub mod cpu;
 pub mod device;
 
-use self::{device::{vga::{CHAR_HEIGHT, CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH}, Device}, cpu::Dump};
+use self::{
+    cpu::Dump,
+    device::{
+        vga::{CHAR_HEIGHT, CHAR_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH},
+        Device,
+    },
+};
 
 const SCALE: i32 = 1;
 
-pub fn run(program: Vec<u8>) {
+pub fn run(program: Vec<u8>, ivt_bytes: [u8; 510]) {
     // println!("{:?}", program);
     let ivt = Arc::new(Mutex::new(device::ram::Ram::new(0x0000, 0x0400)));
-    {let mut l = ivt.lock().unwrap(); l.set_name(String::from("IVT")); }
-
+    {
+        let mut l = ivt.lock().unwrap();
+        l.set_name(String::from("IVT"));
+        l.memory = ivt_bytes.to_vec();
+    }
+    
     let ram = Arc::new(Mutex::new(device::ram::Ram::new(0x0401, 0x4401)));
     let rom = Arc::new(Mutex::new(device::rom::Rom::new(program, 0x4402, 0x400)));
     
     let stack = Arc::new(Mutex::new(device::ram::Ram::new(0x4803, 0x4C03)));
-    {let mut l = ivt.lock().unwrap(); l.set_name(String::from("Stack")); }
-
+    {
+        let mut l = stack.lock().unwrap();
+        l.set_name(String::from("Stack"));
+    }
+    
     let vga = Arc::new(Mutex::new(device::vga::VGA::new(0xA000)));
     let vga_scr = Arc::clone(&vga);
     let mut screen = device::vga::Screen::new(vga_scr);

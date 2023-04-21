@@ -33,6 +33,8 @@ pub enum Opcode {
     ADD = 0b010000,
     SUB = 0b010001,
     RET = 0b010010,
+    INT = 0b010011,
+    REI = 0b010100,
     HLT = 0b111110,
     NOP = 0b111111,
 }
@@ -206,6 +208,16 @@ impl Instruction {
         map.insert(
             Self::create_opcode(Opcode::RET, AddressingMode::Discard),
             (Opcode::RET, AddressingMode::Discard, ret, 0),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::INT, AddressingMode::Immediate),
+            (Opcode::INT, AddressingMode::Immediate, int_immediate, 1)
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::REI, AddressingMode::Discard),
+            (Opcode::REI, AddressingMode::Discard, rei, 0)
         );
 
         map.insert(

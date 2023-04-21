@@ -9,7 +9,7 @@ use clap::{Parser as ClapParser, Subcommand};
 use itertools::Itertools;
 use logos::Logos;
 use std::fs::{self, File};
-use std::io::BufRead;
+use std::io::{BufRead, Read};
 use std::path::PathBuf;
 use std::process::exit;
 use std::str::FromStr;
@@ -43,7 +43,7 @@ enum Commands {
     },
 
     #[command(
-        arg_required_else_help = true,
+        arg_required_else_help = false,
         about = "Generate a markdown opcode table."
     )]
     OpcodeTable,
@@ -114,15 +114,20 @@ fn main() {
                 eprintln!("Input file \"{:?}\" does not exist.", input);
             }
 
-            let file = match fs::read(&input) {
-                Ok(file) => file,
-                Err(error) => {
-                    eprintln!("Unable to open file \"{input:?}\".\n{error}");
-                    exit(1);
-                }
-            };
+            let mut file = File::open(&input).unwrap();
+            let mut buf_file_size = [0_u8; 2];
+            file.read_exact(&mut buf_file_size).unwrap();
+            let file_size = u16::from_be_bytes(buf_file_size);
+            println!("Size: {}", file_size);
 
-            vcpu::run(file);
+            let mut program = vec![0; file_size as usize];
+            file.read_exact(&mut program.as_mut_slice()).unwrap();
+            println!("{:?}", program);
+
+            let mut ivt_buf = [0; 510];
+            file.read_exact(&mut ivt_buf).unwrap();
+
+            vcpu::run(program, ivt_buf);
         }
         Commands::OpcodeTable => {
             let hashmap = common::instruction::opcode::Instruction::hashmap();
@@ -200,7 +205,7 @@ fn main() {
             let variants = Instruction::get_variants(opcode);
 
             println!(
-                "=== Opcode {:?} ===\nBinary: {:05b}\nHex: 0x{:01x}\nModes:",
+                "=== Opcode {:?} ===\nBinary: {:06b}\nHex: 0x{:01x}\nModes:",
                 opcode, opcode as u8, opcode as u8
             );
 

@@ -1,15 +1,21 @@
 use logos::Logos;
 
-#[derive(Logos, Debug, PartialEq)]
+#[derive(Logos, Debug, PartialEq, Clone, Copy)]
 pub enum Token {
     #[token(",")]
     Comma,
 
+    #[token(".int")]
+    InterruptDefine,
+
     #[token("\n")]
     NewLine,
 
-    #[regex(r"\.[a-zA-Z]+ [a-zA-Z0-9]+")]
+    #[regex(r"\.[a-zA-Z]+")]
     Metadata,
+
+    // #[regex(r"\.[a-zA-Z]+ [a-zA-Z0-9]+ [a-zA-Z0-9]+")]
+    // InterruptDefine,
 
     #[regex("[a-zA-Z][a-zA-Z0-9]+:")]
     Label,

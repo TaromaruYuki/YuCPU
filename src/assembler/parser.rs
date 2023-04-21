@@ -25,12 +25,13 @@ pub enum InstructionType {
 #[derive(Debug)]
 pub struct ParserResult {
     pub metadata: HashMap<String, MetadataValue>,
+    pub interrupts: HashMap<u8, String>,
     pub labels: Vec<Label>,
 }
 
 impl ParserResult {
-    pub fn new(metadata: HashMap<String, MetadataValue>, labels: Vec<Label>) -> ParserResult {
-        ParserResult { metadata, labels }
+    pub fn new(metadata: HashMap<String, MetadataValue>, labels: Vec<Label>, interrupts: HashMap<u8, String>) -> ParserResult {
+        ParserResult { metadata, labels, interrupts }
     }
 }
 
@@ -265,6 +266,7 @@ impl Label {
 pub struct Parser {
     tokens: Vec<TokenInfoType>,
     pub metadata: HashMap<String, MetadataValue>,
+    pub interrupts: HashMap<u8, String>,
     pub labels: Vec<Label>,
     current_token_index: u32,
     label_offset: usize,
@@ -272,29 +274,41 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(tokens: Vec<TokenInfoType>) -> Parser {
+        // println!("Tokens: {:?}", tokens);
         Parser {
             tokens,
             metadata: HashMap::new(),
+            interrupts: HashMap::new(),
             labels: Vec::new(),
             current_token_index: 0,
             label_offset: 0,
         }
     }
 
-    fn get_token(&self) -> Option<&TokenInfoType> {
+    fn get_token(&self) -> Option<TokenInfoType> {
         if self.current_token_index == self.tokens.len() as u32 {
             return None;
         }
 
-        Some(&self.tokens[self.current_token_index as usize])
+        Some(self.tokens[self.current_token_index as usize].clone())
     }
 
     fn peek_token(&self) -> Option<&TokenInfoType> {
         if self.current_token_index + 1 == self.tokens.len() as u32 {
             return None;
         }
-
+        
         Some(&self.tokens[(self.current_token_index + 1) as usize])
+    }
+
+    fn convert_byte_to_base(byte: String) -> u8 {
+        let reg = Regex::new(r"^0[xX][0-9A-Fa-f]+$").unwrap();
+
+        if reg.is_match(&byte) {
+            u8::from_str_radix(&byte[2..], 16).unwrap()
+        } else {
+            byte.parse::<u8>().unwrap()
+        }
     }
 
     fn convert_short_to_base(short: String) -> u16 {
@@ -342,14 +356,53 @@ impl Parser {
 
             match token.0 {
                 Token::Metadata => self.parse_metadata(),
+                Token::InterruptDefine => self.set_interrupt(),
                 Token::Label => self.parse_label(),
                 Token::Error => panic!("Unknown symbol \"{}\"", token.1),
                 Token::NewLine => self.current_token_index += 1,
-                _ => panic!("Unknown token {:?}", token.0),
+                _ => panic!("Unknown token \"{:?}\"", token.0),
             }
         }
 
-        ParserResult::new(self.metadata.clone(), self.labels.clone())
+        ParserResult::new(self.metadata.clone(), self.labels.clone(), self.interrupts.clone())
+    }
+
+    fn set_interrupt(&mut self) {
+        if self.get_token().is_none() {
+            panic!("No tokens left, expecting interrupt definition.");
+        }
+
+        self.current_token_index += 1;
+
+        if self.get_token().is_none() {
+            panic!("No tokens left, expected Number");
+        }
+
+        let interrupt_number_token = self.get_token().unwrap();
+
+        match interrupt_number_token.0 {
+            Token::Number => (),
+            _ => panic!("Expecting number, got {:?}", interrupt_number_token.0),
+        }
+
+        self.current_token_index += 1;
+
+        if self.get_token().is_none() {
+            panic!("No tokens left, expected Identifier");
+        }
+
+        let label_name_token = self.get_token().unwrap();
+
+        match label_name_token.0 {
+            Token::Identifier => (),
+            _ => panic!("Expected Identifier, got {:?}", label_name_token.0),
+        }
+
+        let k = Self::convert_byte_to_base(interrupt_number_token.1.clone());
+
+        self.interrupts.insert(k, label_name_token.1.clone());
+
+        self.current_token_index += 1;
     }
 
     fn parse_metadata(&mut self) {
@@ -360,30 +413,33 @@ impl Parser {
         let token = self.get_token().unwrap();
 
         // 0 should be the metadata name, 1 should be the value.
-        let binding = token.1.replace('.', "");
-        let tok_string_split: Vec<&str> = binding.split(' ').collect();
+        let metadata_name = token.1.replace('.', "");
 
-        let type_regex = Regex::new(r"^[a-zA-Z_]+$").unwrap();
-        let num_regex = Regex::new(r"^\b(0[xX][0-9a-fA-F]+|[0-9]+)\b$").unwrap();
+        // let type_regex = Regex::new(r"^[a-zA-Z_]+$").unwrap();
+        // let num_regex = Regex::new(r"^\b(0[xX][0-9a-fA-F]+|[0-9]+)\b$").unwrap();
 
-        // Check if the value is a string
-        if type_regex.is_match(tok_string_split[1]) {
-            // Value is some kind of string
-            self.metadata.insert(
-                String::from(tok_string_split[0]),
-                MetadataValue::String(String::from(tok_string_split[1])),
-            );
-        } else if num_regex.is_match(tok_string_split[1]) {
-            // Value is some kind of number
-            self.metadata.insert(
-                String::from(tok_string_split[0]),
-                MetadataValue::Number(Self::convert_short_to_base(String::from(
-                    tok_string_split[1],
-                ))),
-            );
-        } else {
-            // Value is something else...
-            panic!("Invalid metadata value: {}", tok_string_split[1]);
+        self.current_token_index += 1;
+
+        if self.get_token().is_none() {
+            panic!("No tokens left, expecting Number or Identifier");
+        }
+
+        let ident_token = self.get_token().unwrap();
+
+        match ident_token.0 {
+            Token::Identifier => {
+                self.metadata.insert(
+                    metadata_name,
+                    MetadataValue::String(ident_token.1.clone()),
+                );
+            },
+            Token::Number => {
+                self.metadata.insert(
+                    metadata_name,
+                    MetadataValue::Number(Self::convert_short_to_base(ident_token.1.clone())),
+                );
+            },
+            _ => panic!("Expected Number or Identifier, got {:?}", ident_token.0)
         }
 
         self.current_token_index += 1;
@@ -403,6 +459,7 @@ impl Parser {
 
         self.current_token_index += 1;
 
+        println!("Label {} addr 0x{:x}", label_name, self.label_offset + 0x4402);
         let mut label = Label::new(label_name, self.label_offset + 0x4402);
 
         loop {

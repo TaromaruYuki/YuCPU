@@ -11,6 +11,7 @@ pub struct Assembler {
 
 impl Assembler {
     pub fn new(parser_res: ParserResult) -> Assembler {
+        // println!("Parser result: {:?}", parser_res);
         Assembler { parser_res }
     }
 
@@ -136,6 +137,25 @@ impl Assembler {
                         }
                     }
                 }
+            }
+        }
+
+        let code_len = output.len() as u16;
+
+        output.insert(0, code_len as u8);
+        output.insert(0, ((code_len & 0xFF00) >> 8) as u8);
+
+        for interrupt in 0..255 {
+            // println!("{}", interrupt);
+            if self.parser_res.interrupts.get(&interrupt).is_some() {
+                // The interrupt is defined, put the address in the output
+                let label = Self::find_label(&self.parser_res.interrupts[&interrupt], &self.parser_res.labels).unwrap();
+                output.push((((label.addr as u16) & 0xFF00) >> 8) as u8);
+                output.push(label.addr as u8);
+            } else {
+                // The interrupt is not defined, fill with zero's
+                output.push(0);
+                output.push(0);
             }
         }
 
