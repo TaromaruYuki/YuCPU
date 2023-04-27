@@ -1,8 +1,10 @@
 use std::{
     fs,
     process::exit,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, mpsc::Receiver}, collections::{VecDeque, HashMap},
 };
+
+use crate::vcpu::cpu::{DebugInfo, Flags};
 
 use super::{Device, DeviceResponse};
 use olc_pixel_game_engine as olc;
@@ -14,14 +16,80 @@ pub const CHAR_HEIGHT: i32 = 16;
 pub const SCREEN_WIDTH: i32 = 80;
 pub const SCREEN_HEIGHT: i32 = 25;
 
+pub const DEBUG_WIDTH: i32 = 250;
+pub const DEBUG_PADDING: i32 = 5;
+
+pub const VALID_KEYS: [olc::Key; 42] = [
+    olc::Key::SPACE, olc::Key::CTRL, olc::Key::SHIFT, olc::Key::PERIOD, olc::Key::ENTER, olc::Key::BACK,
+    olc::Key::K0, olc::Key::K1, olc::Key::K2, olc::Key::K3, olc::Key::K4, olc::Key::K5, olc::Key::K6, olc::Key::K7, olc::Key::K8, olc::Key::K9,
+    olc::Key::A, olc::Key::B, olc::Key::C, olc::Key::D, olc::Key::E, olc::Key::F, olc::Key::G, olc::Key::H, olc::Key::I, olc::Key::J,
+    olc::Key::K, olc::Key::L, olc::Key::M, olc::Key::N, olc::Key::O, olc::Key::P, olc::Key::Q, olc::Key::R, olc::Key::S, olc::Key::T,
+    olc::Key::U, olc::Key::V,olc::Key::W, olc::Key::X, olc::Key::Y, olc::Key::Z,
+];
+
+pub fn key_to_char(key: olc::Key) -> u8 {
+    match key {
+        olc::Key::SPACE => 32,
+        olc::Key::PERIOD => 46,
+        olc::Key::ENTER => 10,
+        olc::Key::BACK => 8,
+        olc::Key::K0 => 48,
+        olc::Key::K1 => 49,
+        olc::Key::K2 => 50,
+        olc::Key::K3 => 51,
+        olc::Key::K4 => 52,
+        olc::Key::K5 => 53,
+        olc::Key::K6 => 54,
+        olc::Key::K7 => 55,
+        olc::Key::K8 => 56,
+        olc::Key::K9 => 57,
+        olc::Key::A => 65,
+        olc::Key::B => 66,
+        olc::Key::C => 67,
+        olc::Key::D => 68,
+        olc::Key::E => 69,
+        olc::Key::F => 70,
+        olc::Key::G => 71,
+        olc::Key::H => 72,
+        olc::Key::I => 73,
+        olc::Key::J => 74,
+        olc::Key::K => 75,
+        olc::Key::L => 76,
+        olc::Key::M => 77,
+        olc::Key::N => 78,
+        olc::Key::O => 79,
+        olc::Key::P => 80,
+        olc::Key::Q => 81,
+        olc::Key::R => 82,
+        olc::Key::S => 83,
+        olc::Key::T => 84,
+        olc::Key::U => 85,
+        olc::Key::V => 86,
+        olc::Key::W => 87,
+        olc::Key::X => 88,
+        olc::Key::Y => 89,
+        olc::Key::Z => 90,
+        _ => panic!("Invalid key :(")
+    }
+}
+
+#[derive(Debug)]
+pub enum KeyEvent {
+    Up(olc::Key),
+    Down(olc::Key)
+}
+
 pub struct Screen {
     // #[allow(dead_code)]
     vga: Arc<Mutex<VGA>>,
     font: Vec<u8>,
+    debug_rx: Receiver<DebugInfo>,
+    debug_mode: bool,
+    keys: Arc<Mutex<VecDeque<KeyEvent>>>,
 }
 
 impl Screen {
-    pub fn new(vga: Arc<Mutex<VGA>>) -> Self {
+    pub fn new(vga: Arc<Mutex<VGA>>, debug_rx: Receiver<DebugInfo>, debug_mode: bool, keys: Arc<Mutex<VecDeque<KeyEvent>>>) -> Self {
         let file = match fs::read("resources/AVGA2_8x16.bin") {
             Ok(file) => file,
             Err(error) => {
@@ -30,7 +98,7 @@ impl Screen {
             }
         };
 
-        Self { vga, font: file }
+        Self { vga, font: file, debug_rx, debug_mode, keys }
     }
 
     pub fn vga_color_to_pixel(color: VGAColor) -> olc::Pixel {
@@ -53,6 +121,34 @@ impl Screen {
             VGAColor::White => olc::Pixel::rgb(0xFF, 0xFF, 0xFF),
         }
     }
+
+    pub fn debug_scr(&self, debug_info: DebugInfo) {
+        let offset_x = CHAR_WIDTH * SCREEN_WIDTH + DEBUG_PADDING;
+        let offset_y = DEBUG_PADDING;
+
+        olc::fill_rect(offset_x - DEBUG_PADDING, 0, DEBUG_WIDTH, CHAR_HEIGHT * SCREEN_HEIGHT, olc::BLUE);
+
+        olc::draw_string(offset_x, offset_y + 00, &format!("R1: 0x{:x}", debug_info.r1), olc::WHITE).unwrap();
+        olc::draw_string(offset_x, offset_y + 10, &format!("R2: 0x{:x}", debug_info.r2), olc::WHITE).unwrap();
+        olc::draw_string(offset_x, offset_y + 20, &format!("R3: 0x{:x}", debug_info.r3), olc::WHITE).unwrap();
+        olc::draw_string(offset_x, offset_y + 30, &format!("R4: 0x{:x}", debug_info.r4), olc::WHITE).unwrap();
+        olc::draw_string(offset_x, offset_y + 40, &format!("R5: 0x{:x}", debug_info.r5), olc::WHITE).unwrap();
+        olc::draw_string(offset_x, offset_y + 50, &format!("R6: 0x{:x}", debug_info.r6), olc::WHITE).unwrap();
+
+        olc::draw_string(offset_x + 100, offset_y, &format!("PC: 0x{:x}", debug_info.pc), olc::WHITE).unwrap();
+        olc::draw_string(offset_x + 100, offset_y + 10, &format!("SP: 0x{:x}", debug_info.sp), olc::WHITE).unwrap();
+        olc::draw_string(offset_x + 100, offset_y + 20, &format!("BP: 0x{:x}", debug_info.bp), olc::WHITE).unwrap();
+
+        olc::draw_string(offset_x + 100, offset_y + 40, &format!("Pins:"), olc::WHITE).unwrap();
+        olc::draw_string(offset_x + 100, offset_y + 50, &format!("IRQ Pins: {:?}", debug_info.pins.irq), olc::WHITE).unwrap();
+
+        olc::draw_string(offset_x, offset_y + 70, "Flags:", olc::WHITE).unwrap();
+        olc::draw_string(offset_x, offset_y + 80, &format!("D: {}", debug_info.flags.contains(Flags::D)), olc::WHITE).unwrap();
+        olc::draw_string(offset_x, offset_y + 90, &format!("G: {}", debug_info.flags.contains(Flags::G)), olc::WHITE).unwrap();
+        olc::draw_string(offset_x, offset_y + 100, &format!("L: {}", debug_info.flags.contains(Flags::L)), olc::WHITE).unwrap();
+        olc::draw_string(offset_x, offset_y + 110, &format!("O: {}", debug_info.flags.contains(Flags::O)), olc::WHITE).unwrap();
+        olc::draw_string(offset_x, offset_y + 120, &format!("Z: {}", debug_info.flags.contains(Flags::Z)), olc::WHITE).unwrap();
+    }
 }
 
 impl olc::Application for Screen {
@@ -71,7 +167,25 @@ impl olc::Application for Screen {
             }
         };
 
+        let mut lock_keys = self.keys.lock().unwrap();
+
+        for key in VALID_KEYS {
+            let key_status = olc::get_key(key);
+
+            if key_status.pressed {
+                lock_keys.push_back(KeyEvent::Down(key));
+            } else if key_status.released {
+                lock_keys.push_back(KeyEvent::Up(key));
+            }
+        }
+
         olc::clear(olc::BLACK);
+
+        if self.debug_mode {
+            let debug_info = self.debug_rx.recv().unwrap();
+            self.debug_scr(debug_info);
+        }
+
 
         // println!("{:?}", memory.read_byte(655361));
         for y in 0..SCREEN_HEIGHT {

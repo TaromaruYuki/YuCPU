@@ -532,22 +532,6 @@ pub fn ret(cpu: &mut CPU) {
     cpu.pc = addr;
 }
 
-fn push_val_int(cpu: &mut CPU, value: u16) {
-    match cpu.map.write(cpu.sp as u32, value) {
-        DeviceMapResult::Ok(_) => (),
-        DeviceMapResult::NoDevices => panic!("No devices attached. Could not read any values."),
-        DeviceMapResult::Error(err) => {
-            if err == DeviceResponse::ReadOnly {
-                panic!("Device read only. Could not read value.");
-            } else {
-                panic!("Unknown error. Could not read value.");
-            }
-        }
-    };
-
-    cpu.sp += 2;
-}
-
 pub fn int_immediate(cpu: &mut CPU) {
     let addr = cpu.dr * 2;
     // println!("Read addr {}", addr);
@@ -564,47 +548,13 @@ pub fn int_immediate(cpu: &mut CPU) {
         }
     };
 
-    // println!("Jump addr: {}", jump_addr);
-
-    cpu.flags = Flags::all();
-
-    push_val_int(cpu, cpu.r1);
-    push_val_int(cpu, cpu.r2);
-    push_val_int(cpu, cpu.r3);
-    push_val_int(cpu, cpu.r4);
-    push_val_int(cpu, cpu.r5);
-    push_val_int(cpu, cpu.r6);
-    push_val_int(cpu, cpu.flags.bits() as u16);
-    push_val_int(cpu, cpu.pc + cpu.is as u16);
+    cpu.push_registers();
 
     cpu.pc = jump_addr;
 }
 
-fn pop_val_rei(cpu: &mut CPU) -> u16 {
-    cpu.sp -= 2;
-
-    match cpu.map.read(cpu.sp as u32) {
-        DeviceMapResult::Ok(val) => val,
-        DeviceMapResult::NoDevices => panic!("No devices attached. Could not read any values."),
-        DeviceMapResult::Error(err) => {
-            if err == DeviceResponse::WriteOnly {
-                panic!("Device write only. Could not read value.");
-            } else {
-                panic!("Unknown error. Could not read value.");
-            }
-        }
-    }
-}
-
 pub fn rei(cpu: &mut CPU) {
-    cpu.pc = pop_val_rei(cpu);
-    cpu.flags = Flags::from_bits(pop_val_rei(cpu) as u32).unwrap();
-    cpu.r6 = pop_val_rei(cpu);
-    cpu.r5 = pop_val_rei(cpu);
-    cpu.r4 = pop_val_rei(cpu);
-    cpu.r3 = pop_val_rei(cpu);
-    cpu.r2 = pop_val_rei(cpu);
-    cpu.r1 = pop_val_rei(cpu);
+    cpu.pop_registers();
 
     cpu.dump(crate::vcpu::cpu::Dump::Memory);
 }

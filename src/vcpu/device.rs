@@ -2,6 +2,7 @@ pub mod map;
 pub mod ram;
 pub mod rom;
 pub mod vga;
+pub mod bios;
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum DeviceResponse<T> {

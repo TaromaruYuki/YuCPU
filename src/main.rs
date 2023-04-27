@@ -40,6 +40,9 @@ enum Commands {
     Run {
         #[arg(short, long)]
         input: PathBuf,
+
+        #[arg(short)]
+        debug_mode: bool,
     },
 
     #[command(
@@ -107,7 +110,7 @@ fn main() {
                 }
             };
         }
-        Commands::Run { input } => {
+        Commands::Run { input, debug_mode } => {
             // Check if the input file exists
 
             if !input.as_path().exists() {
@@ -127,7 +130,7 @@ fn main() {
             let mut ivt_buf = [0; 510];
             file.read_exact(&mut ivt_buf).unwrap();
 
-            vcpu::run(program, ivt_buf);
+            vcpu::run(program, ivt_buf, debug_mode);
         }
         Commands::OpcodeTable => {
             let hashmap = common::instruction::opcode::Instruction::hashmap();

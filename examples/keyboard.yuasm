@@ -1,0 +1,27 @@
+.main start
+.int 0x01 keyboard
+
+start:
+    mov r1, 0xA001
+    st r1, $0x0401
+    
+loop:
+    jmp loop
+
+keyboard:
+    ld r1, $0x0401
+    cmp r1, 0xafa1
+    bne keyboardsetkey
+
+keyboardmaxed:
+    mov r1, 0xA001
+    st r1, $0x0401
+    jmp keyboardsetkey
+
+keyboardsetkey:
+    ld r2, $0x4C40 ; The key
+    stl r2, r1
+
+    add r1, 2
+    st r1, $0x0401
+    rei

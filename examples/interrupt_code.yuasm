@@ -1,7 +1,8 @@
 .main start
 .int 0x00 interrupt
-.int 0x01 sleep
-.int 0x02 print
+.int 0x01 keyboard
+.int 0x02 sleep
+.int 0x03 print
 
 start:
     mov r2, 0x0401           ; Load the address we will use to store our string
@@ -49,9 +50,9 @@ start:
     mov r1, 0x00             ; Just in case the next value isn't 0 in RAM
     stl r1, r2
 
-    int 0x02                 ; Custom interrupt for printing to screen
+    int 0x03                 ; Custom interrupt for printing to screen
 
-    int 0x01                 ; Custom interrupt to make the cpu sleep
+    int 0x02                 ; Custom interrupt to make the cpu sleep
 
     int 0x00                 ; A test interrupt
 
@@ -90,5 +91,10 @@ sleeploop:
     cmp r6, 1000
 
     bne sleeploop
+    rei
+
+keyboard:
+    ld r1, $0x4C40
+    stl r1, $0xA001
     rei
 
