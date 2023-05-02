@@ -2,7 +2,7 @@
   "name": "yucpu",
   "displayName": "YuCPU",
   "description": "",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "TaromaruYuki",
   "repository": "https://github.com/TaromaruYuki/YuCPU/tree/vscode-ext",
   "engines": {
