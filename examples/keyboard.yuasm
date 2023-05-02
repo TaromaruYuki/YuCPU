@@ -2,26 +2,58 @@
 .int 0x01 keyboard
 
 start:
-    mov r1, 0xA001
-    st r1, $0x0401
+    mov r5, 0 ; x
+    stl r5, $0x401
+    mov r6, 0 ; y
+    stl r6, $0x402
     
 loop:
     jmp loop
 
 keyboard:
-    ld r1, $0x0401
-    cmp r1, 0xafa1
-    bne keyboardsetkey
+    ldb r5, $0x401
+    ldb r6, $0x402
+    ld r2, $0x4C40
 
-keyboardmaxed:
-    mov r1, 0xA001
-    st r1, $0x0401
     jmp keyboardsetkey
 
 keyboardsetkey:
-    ld r2, $0x4C40 ; The key
-    stl r2, r1
+    mov r1, 0xA000
+    mov r4, 80
+    mul r4, r6
+    add r4, r5 ; R4 now has the offset we need to add to 0xA000 to get to the current screen position.
+    add r1, r4
 
-    add r1, 2
-    st r1, $0x0401
+    ld r3, r1
+    and r3, 0xFF00
+    or r3, r2
+
+    st r3, r1
+
+    add r5, 1
+
+    cmp r5, 80
+
+    bge keyboardxoverflow
+
+checkyoverflow:
+    cmp r6, 25
+    bge keyboardyoverflow
+
+    jmp keyboardreturn
+
+keyboardxoverflow:
+    add r6, 1
+    mov r5, 0
+    jmp checkyoverflow
+
+keyboardyoverflow:
+    mov r5, 0
+    mov r6, 0
+
+    jmp keyboardreturn
+
+keyboardreturn:
+    stl r5, $0x401
+    stl r6, $0x402
     rei

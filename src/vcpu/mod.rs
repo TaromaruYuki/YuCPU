@@ -75,8 +75,11 @@ pub fn run(program: Vec<u8>, ivt_bytes: [u8; 510], debug_mode: bool) {
     if debug_mode {
         cpu.debug_tx = Some(debug_tx);
     }
+
+    let vga_thread_builder = thread::Builder::new()
+        .name(String::from("VGA"));
     
-    let vga_thread = thread::spawn(move || {
+    let vga_thread = vga_thread_builder.spawn(move || {
         olc::start(
             "YuCPU PC",
             &mut screen,
@@ -87,7 +90,7 @@ pub fn run(program: Vec<u8>, ivt_bytes: [u8; 510], debug_mode: bool) {
         )
         .unwrap();
         running_screen.store(false, std::sync::atomic::Ordering::Release);
-    });
+    }).unwrap();
 
     loop {
         pins = cpu.tick(pins);
@@ -103,18 +106,17 @@ pub fn run(program: Vec<u8>, ivt_bytes: [u8; 510], debug_mode: bool) {
         let mut lock_keys = keys.lock().unwrap();
         // println!("Keys: {:?}", lock_keys);
 
-        if lock_keys.len() > 0 {
+        if lock_keys.len() > 0 && pins.irq == IrqPin::Off {
             // We have a new key press! We can unwrap since we know the length is greater than one.
             let key_event = lock_keys.pop_back().unwrap();
             let mut lock_bda = bda.lock().unwrap();
+            
             match key_event {
                 KeyEvent::Up(key) => {
                     match key {
                         olc::Key::CTRL => lock_bda.set_keyboard_flag(KeyboardFlags::CONTROL, false).unwrap(),
                         olc::Key::SHIFT => lock_bda.set_keyboard_flag(KeyboardFlags::LSHIFT, false).unwrap(),
-                        _ => {
-                            lock_bda.set_keyboard_buffer(0).unwrap();
-                        }
+                        _ => () // lock_bda.set_keyboard_buffer(0).unwrap()
                     };
                 },
                 KeyEvent::Down(key) => {

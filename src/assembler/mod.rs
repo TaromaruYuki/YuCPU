@@ -77,8 +77,10 @@ impl Assembler {
                             }
                         }
                         InstructionArg::Identifier(ident) => {
-                            let label =
-                                Assembler::find_label(ident, &self.parser_res.labels).unwrap();
+                            let label = match Assembler::find_label(ident, &self.parser_res.labels) {
+                                Some(label) => label,
+                                None => panic!("Label {} does not exist!", ident),
+                            };
 
                             meta |= 0b0000_0100;
                             output.push(meta);

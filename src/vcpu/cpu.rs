@@ -359,6 +359,7 @@ impl CPU {
     }
 
     pub fn pop_registers(&mut self) {
+        // self.dump(Dump::All);
         self.sp -= 2;
         self.pc = match self.map.read(self.sp as u32) {
             DeviceMapResult::Ok(val) => val,

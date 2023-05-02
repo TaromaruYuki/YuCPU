@@ -43,32 +43,32 @@ pub fn key_to_char(key: olc::Key) -> u8 {
         olc::Key::K7 => 55,
         olc::Key::K8 => 56,
         olc::Key::K9 => 57,
-        olc::Key::A => 65,
-        olc::Key::B => 66,
-        olc::Key::C => 67,
-        olc::Key::D => 68,
-        olc::Key::E => 69,
-        olc::Key::F => 70,
-        olc::Key::G => 71,
-        olc::Key::H => 72,
-        olc::Key::I => 73,
-        olc::Key::J => 74,
-        olc::Key::K => 75,
-        olc::Key::L => 76,
-        olc::Key::M => 77,
-        olc::Key::N => 78,
-        olc::Key::O => 79,
-        olc::Key::P => 80,
-        olc::Key::Q => 81,
-        olc::Key::R => 82,
-        olc::Key::S => 83,
-        olc::Key::T => 84,
-        olc::Key::U => 85,
-        olc::Key::V => 86,
-        olc::Key::W => 87,
-        olc::Key::X => 88,
-        olc::Key::Y => 89,
-        olc::Key::Z => 90,
+        olc::Key::A => 97,
+        olc::Key::B => 98,
+        olc::Key::C => 99,
+        olc::Key::D => 100,
+        olc::Key::E => 101,
+        olc::Key::F => 102,
+        olc::Key::G => 103,
+        olc::Key::H => 104,
+        olc::Key::I => 105,
+        olc::Key::J => 106,
+        olc::Key::K => 107,
+        olc::Key::L => 108,
+        olc::Key::M => 109,
+        olc::Key::N => 110,
+        olc::Key::O => 111,
+        olc::Key::P => 112,
+        olc::Key::Q => 113,
+        olc::Key::R => 114,
+        olc::Key::S => 115,
+        olc::Key::T => 116,
+        olc::Key::U => 117,
+        olc::Key::V => 118,
+        olc::Key::W => 119,
+        olc::Key::X => 120,
+        olc::Key::Y => 121,
+        olc::Key::Z => 122,
         _ => panic!("Invalid key :(")
     }
 }
@@ -157,15 +157,7 @@ impl olc::Application for Screen {
     }
 
     fn on_user_update(&mut self, _elapsed_time: f32) -> Result<(), olc::Error> {
-        let memory = match self.vga.lock() {
-            Ok(lock) => {
-                // println!("Got lock!");
-                lock
-            }
-            Err(err) => {
-                panic!("Could not get lock. {}", err);
-            }
-        };
+        let memory = self.vga.lock().unwrap();
 
         let mut lock_keys = self.keys.lock().unwrap();
 
@@ -262,7 +254,7 @@ impl VGACharacter {
 
     pub fn bytes(&self) -> [u8; 2] {
         let color_num = self.color as u8;
-        let background_num = self.color as u8;
+        let background_num = self.background as u8;
         let attr_byte = (background_num << 4) | color_num;
 
         [attr_byte, self.character]
@@ -331,10 +323,6 @@ impl Device for VGA {
             let color = ((value & 0x0F00) >> 8) as u8;
             let character = value as u8;
             let relative_addr = self.relative(addr);
-
-            if relative_addr % 2 != 0 {
-                return DeviceResponse::InvalidAddress;
-            }
 
             self.memory[relative_addr].background =
                 VGAColor::iter().nth(background as usize).unwrap();

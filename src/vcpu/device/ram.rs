@@ -45,6 +45,10 @@ impl Device for Ram {
 
     fn write(&mut self, addr: u32, value: u16) -> DeviceResponse<()> {
         if addr >= self.start && addr <= self.end {
+            if self.name == "Stack" {
+                println!("Saving at addr {}", self.relative(addr));
+            }
+
             let val1 = (value >> 8) as u8;
             let val2 = value as u8;
             let addr1 = self.relative(addr);

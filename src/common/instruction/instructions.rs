@@ -1,5 +1,6 @@
 use super::opcode::AddressingMode;
 use super::opcode::Opcode;
+use crate::vcpu::cpu::Dump;
 use crate::vcpu::cpu::Flags;
 use crate::vcpu::cpu::CPU;
 use crate::vcpu::device::map::DeviceMapResult;
@@ -343,21 +344,32 @@ fn compare(cpu: &mut CPU, val1: u16, val2: u16) {
     cpu.flags.set(Flags::Z, false);
     cpu.flags.set(Flags::L, false);
     cpu.flags.set(Flags::G, false);
-
+    
     if val1 == val2 {
         cpu.flags.set(Flags::Z, true);
-    }
-
+    } 
+    
     if val1 < val2 {
         cpu.flags.set(Flags::L, true);
     }
-
+    
     if val1 > val2 {
+        cpu.flags.set(Flags::G, true);
+    }
+
+    if val1 <= val2 {
+        cpu.flags.set(Flags::Z, true);    
+        cpu.flags.set(Flags::L, true);
+    }
+    
+    if val1 >= val2 {
+        cpu.flags.set(Flags::Z, true);    
         cpu.flags.set(Flags::G, true);
     }
 }
 
 pub fn cmp_immediate(cpu: &mut CPU) {
+    cpu.dump(Dump::All);
     let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
     let val2 = cpu.dr;
 
@@ -553,10 +565,123 @@ pub fn int_immediate(cpu: &mut CPU) {
     cpu.pc = jump_addr;
 }
 
-pub fn rei(cpu: &mut CPU) {
-    cpu.pop_registers();
+pub fn and_immediate(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) & cpu.dr;
+    cpu.advance();
+}
+pub fn and_register(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) & *cpu.decode_register(cpu.dr as u8);
+    cpu.advance();
+}
 
-    cpu.dump(crate::vcpu::cpu::Dump::Memory);
+pub fn or_immediate(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) | cpu.dr;
+    cpu.advance();
+}
+pub fn or_register(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) | *cpu.decode_register(cpu.dr as u8);
+    cpu.advance();
+}
+
+pub fn xor_immediate(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) ^ cpu.dr;
+    cpu.advance();
+}
+pub fn xor_register(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) ^ *cpu.decode_register(cpu.dr as u8);
+    cpu.advance();
+}
+
+pub fn lsh_immediate(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) << cpu.dr;
+    cpu.advance();
+}
+pub fn lsh_register(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) << *cpu.decode_register(cpu.dr as u8);
+    cpu.advance();
+}
+
+pub fn rsh_immediate(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) >> cpu.dr;
+    cpu.advance();
+}
+pub fn rsh_register(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) >> *cpu.decode_register(cpu.dr as u8);
+    cpu.advance();
+}
+
+pub fn rei(cpu: &mut CPU) {
+    println!("Returning from interrupt.");
+    cpu.pop_registers();
+}
+
+fn mul(cpu: &mut CPU, val1: u16, val2: u16) -> u16 {
+    let (result, overflow) = val1.overflowing_mul(val2);
+
+    if overflow {
+        cpu.flags.set(Flags::O, true);
+    } else {
+        cpu.flags.set(Flags::O, false);
+    }
+
+    result
+}
+
+pub fn mul_immediate(cpu: &mut CPU) {
+    let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
+    let val2 = cpu.dr;
+
+    let result = mul(cpu, val1, val2);
+
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = result;
+    cpu.advance();
+}
+
+pub fn mul_register(cpu: &mut CPU) {
+    let val1 = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8);
+    let val2 = *cpu.decode_register(cpu.dr as u8);
+
+    let result = mul(cpu, val1, val2);
+
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = result;
+    cpu.advance();
+}
+
+pub fn mod_immediate(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) % cpu.dr;
+    cpu.advance();
+}
+pub fn mod_register(cpu: &mut CPU) {
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) % *cpu.decode_register(cpu.dr as u8);
+    cpu.advance();
+}
+
+pub fn ble(cpu: &mut CPU) {
+    // cpu.dump(Dump::All);
+    if cpu.flags.contains(Flags::L) && cpu.flags.contains(Flags::Z) {
+        cpu.pc = if cpu.flags.contains(Flags::D) {
+            (cpu.dr << 4) | ((cpu.ad as u16) & 0xF)
+        } else {
+            cpu.dr
+        };
+        return;
+    }
+
+    cpu.advance();
+}
+
+pub fn bge(cpu: &mut CPU) {
+    // cpu.dump(Dump::All);
+    if cpu.flags.contains(Flags::G) && cpu.flags.contains(Flags::Z) {
+        cpu.pc = if cpu.flags.contains(Flags::D) {
+            (cpu.dr << 4) | ((cpu.ad as u16) & 0xF)
+        } else {
+            cpu.dr
+        };
+        return;
+    }
+
+    cpu.advance();
 }
 
 pub fn hlt(cpu: &mut CPU) {
