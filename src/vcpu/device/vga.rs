@@ -1,7 +1,8 @@
 use std::{
+    collections::VecDeque,
     fs,
     process::exit,
-    sync::{Arc, Mutex, mpsc::Receiver}, collections::{VecDeque, HashMap},
+    sync::{mpsc::Receiver, Arc, Mutex},
 };
 
 use crate::vcpu::cpu::{DebugInfo, Flags};
@@ -20,11 +21,48 @@ pub const DEBUG_WIDTH: i32 = 250;
 pub const DEBUG_PADDING: i32 = 5;
 
 pub const VALID_KEYS: [olc::Key; 42] = [
-    olc::Key::SPACE, olc::Key::CTRL, olc::Key::SHIFT, olc::Key::PERIOD, olc::Key::ENTER, olc::Key::BACK,
-    olc::Key::K0, olc::Key::K1, olc::Key::K2, olc::Key::K3, olc::Key::K4, olc::Key::K5, olc::Key::K6, olc::Key::K7, olc::Key::K8, olc::Key::K9,
-    olc::Key::A, olc::Key::B, olc::Key::C, olc::Key::D, olc::Key::E, olc::Key::F, olc::Key::G, olc::Key::H, olc::Key::I, olc::Key::J,
-    olc::Key::K, olc::Key::L, olc::Key::M, olc::Key::N, olc::Key::O, olc::Key::P, olc::Key::Q, olc::Key::R, olc::Key::S, olc::Key::T,
-    olc::Key::U, olc::Key::V,olc::Key::W, olc::Key::X, olc::Key::Y, olc::Key::Z,
+    olc::Key::SPACE,
+    olc::Key::CTRL,
+    olc::Key::SHIFT,
+    olc::Key::PERIOD,
+    olc::Key::ENTER,
+    olc::Key::BACK,
+    olc::Key::K0,
+    olc::Key::K1,
+    olc::Key::K2,
+    olc::Key::K3,
+    olc::Key::K4,
+    olc::Key::K5,
+    olc::Key::K6,
+    olc::Key::K7,
+    olc::Key::K8,
+    olc::Key::K9,
+    olc::Key::A,
+    olc::Key::B,
+    olc::Key::C,
+    olc::Key::D,
+    olc::Key::E,
+    olc::Key::F,
+    olc::Key::G,
+    olc::Key::H,
+    olc::Key::I,
+    olc::Key::J,
+    olc::Key::K,
+    olc::Key::L,
+    olc::Key::M,
+    olc::Key::N,
+    olc::Key::O,
+    olc::Key::P,
+    olc::Key::Q,
+    olc::Key::R,
+    olc::Key::S,
+    olc::Key::T,
+    olc::Key::U,
+    olc::Key::V,
+    olc::Key::W,
+    olc::Key::X,
+    olc::Key::Y,
+    olc::Key::Z,
 ];
 
 pub fn key_to_char(key: olc::Key) -> u8 {
@@ -69,14 +107,14 @@ pub fn key_to_char(key: olc::Key) -> u8 {
         olc::Key::X => 120,
         olc::Key::Y => 121,
         olc::Key::Z => 122,
-        _ => panic!("Invalid key :(")
+        _ => panic!("Invalid key :("),
     }
 }
 
 #[derive(Debug)]
 pub enum KeyEvent {
     Up(olc::Key),
-    Down(olc::Key)
+    Down(olc::Key),
 }
 
 pub struct Screen {
@@ -89,7 +127,12 @@ pub struct Screen {
 }
 
 impl Screen {
-    pub fn new(vga: Arc<Mutex<VGA>>, debug_rx: Receiver<DebugInfo>, debug_mode: bool, keys: Arc<Mutex<VecDeque<KeyEvent>>>) -> Self {
+    pub fn new(
+        vga: Arc<Mutex<VGA>>,
+        debug_rx: Receiver<DebugInfo>,
+        debug_mode: bool,
+        keys: Arc<Mutex<VecDeque<KeyEvent>>>,
+    ) -> Self {
         let file = match fs::read("resources/AVGA2_8x16.bin") {
             Ok(file) => file,
             Err(error) => {
@@ -98,7 +141,13 @@ impl Screen {
             }
         };
 
-        Self { vga, font: file, debug_rx, debug_mode, keys }
+        Self {
+            vga,
+            font: file,
+            debug_rx,
+            debug_mode,
+            keys,
+        }
     }
 
     pub fn vga_color_to_pixel(color: VGAColor) -> olc::Pixel {
@@ -126,28 +175,124 @@ impl Screen {
         let offset_x = CHAR_WIDTH * SCREEN_WIDTH + DEBUG_PADDING;
         let offset_y = DEBUG_PADDING;
 
-        olc::fill_rect(offset_x - DEBUG_PADDING, 0, DEBUG_WIDTH, CHAR_HEIGHT * SCREEN_HEIGHT, olc::BLUE);
+        olc::fill_rect(
+            offset_x - DEBUG_PADDING,
+            0,
+            DEBUG_WIDTH,
+            CHAR_HEIGHT * SCREEN_HEIGHT,
+            olc::BLUE,
+        );
 
-        olc::draw_string(offset_x, offset_y + 00, &format!("R1: 0x{:x}", debug_info.r1), olc::WHITE).unwrap();
-        olc::draw_string(offset_x, offset_y + 10, &format!("R2: 0x{:x}", debug_info.r2), olc::WHITE).unwrap();
-        olc::draw_string(offset_x, offset_y + 20, &format!("R3: 0x{:x}", debug_info.r3), olc::WHITE).unwrap();
-        olc::draw_string(offset_x, offset_y + 30, &format!("R4: 0x{:x}", debug_info.r4), olc::WHITE).unwrap();
-        olc::draw_string(offset_x, offset_y + 40, &format!("R5: 0x{:x}", debug_info.r5), olc::WHITE).unwrap();
-        olc::draw_string(offset_x, offset_y + 50, &format!("R6: 0x{:x}", debug_info.r6), olc::WHITE).unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y,
+            &format!("R1: 0x{:x}", debug_info.r1),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y + 10,
+            &format!("R2: 0x{:x}", debug_info.r2),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y + 20,
+            &format!("R3: 0x{:x}", debug_info.r3),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y + 30,
+            &format!("R4: 0x{:x}", debug_info.r4),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y + 40,
+            &format!("R5: 0x{:x}", debug_info.r5),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y + 50,
+            &format!("R6: 0x{:x}", debug_info.r6),
+            olc::WHITE,
+        )
+        .unwrap();
 
-        olc::draw_string(offset_x + 100, offset_y, &format!("PC: 0x{:x}", debug_info.pc), olc::WHITE).unwrap();
-        olc::draw_string(offset_x + 100, offset_y + 10, &format!("SP: 0x{:x}", debug_info.sp), olc::WHITE).unwrap();
-        olc::draw_string(offset_x + 100, offset_y + 20, &format!("BP: 0x{:x}", debug_info.bp), olc::WHITE).unwrap();
+        olc::draw_string(
+            offset_x + 100,
+            offset_y,
+            &format!("PC: 0x{:x}", debug_info.pc),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x + 100,
+            offset_y + 10,
+            &format!("SP: 0x{:x}", debug_info.sp),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x + 100,
+            offset_y + 20,
+            &format!("BP: 0x{:x}", debug_info.bp),
+            olc::WHITE,
+        )
+        .unwrap();
 
-        olc::draw_string(offset_x + 100, offset_y + 40, &format!("Pins:"), olc::WHITE).unwrap();
-        olc::draw_string(offset_x + 100, offset_y + 50, &format!("IRQ Pins: {:?}", debug_info.pins.irq), olc::WHITE).unwrap();
+        olc::draw_string(offset_x + 100, offset_y + 40, "Pins:", olc::WHITE).unwrap();
+        olc::draw_string(
+            offset_x + 100,
+            offset_y + 50,
+            &format!("IRQ Pins: {:?}", debug_info.pins.irq),
+            olc::WHITE,
+        )
+        .unwrap();
 
         olc::draw_string(offset_x, offset_y + 70, "Flags:", olc::WHITE).unwrap();
-        olc::draw_string(offset_x, offset_y + 80, &format!("D: {}", debug_info.flags.contains(Flags::D)), olc::WHITE).unwrap();
-        olc::draw_string(offset_x, offset_y + 90, &format!("G: {}", debug_info.flags.contains(Flags::G)), olc::WHITE).unwrap();
-        olc::draw_string(offset_x, offset_y + 100, &format!("L: {}", debug_info.flags.contains(Flags::L)), olc::WHITE).unwrap();
-        olc::draw_string(offset_x, offset_y + 110, &format!("O: {}", debug_info.flags.contains(Flags::O)), olc::WHITE).unwrap();
-        olc::draw_string(offset_x, offset_y + 120, &format!("Z: {}", debug_info.flags.contains(Flags::Z)), olc::WHITE).unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y + 80,
+            &format!("D: {}", debug_info.flags.contains(Flags::D)),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y + 90,
+            &format!("G: {}", debug_info.flags.contains(Flags::G)),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y + 100,
+            &format!("L: {}", debug_info.flags.contains(Flags::L)),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y + 110,
+            &format!("O: {}", debug_info.flags.contains(Flags::O)),
+            olc::WHITE,
+        )
+        .unwrap();
+        olc::draw_string(
+            offset_x,
+            offset_y + 120,
+            &format!("Z: {}", debug_info.flags.contains(Flags::Z)),
+            olc::WHITE,
+        )
+        .unwrap();
     }
 }
 
@@ -177,7 +322,6 @@ impl olc::Application for Screen {
             let debug_info = self.debug_rx.recv().unwrap();
             self.debug_scr(debug_info);
         }
-
 
         // println!("{:?}", memory.read_byte(655361));
         for y in 0..SCREEN_HEIGHT {

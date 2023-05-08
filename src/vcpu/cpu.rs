@@ -2,7 +2,10 @@ use std::{fs, sync::mpsc::Sender};
 
 use bitflags::bitflags;
 
-use crate::{common::instruction::opcode::InstructionError, vcpu::device::DeviceResponse};
+use crate::{
+    common::instruction::opcode::{InstructionError, Opcode},
+    vcpu::device::DeviceResponse,
+};
 
 use super::device::map::{DeviceMap, DeviceMapResult};
 use crate::common::instruction::opcode::Instruction;
@@ -29,7 +32,7 @@ pub enum ReadWrite {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IrqPin {
     Off,
-    On(u8)
+    On(u8),
 }
 
 #[derive(Clone, Copy)]
@@ -37,7 +40,7 @@ pub struct Pins {
     pub data: u16,
     pub address: u32, // We will only use 20 bits out of the 32: 0b0000_00000000_00000000
     pub rw: ReadWrite,
-    pub irq: IrqPin
+    pub irq: IrqPin,
 }
 
 impl Pins {
@@ -46,7 +49,7 @@ impl Pins {
             data: 0,
             address: 0,
             rw: ReadWrite::Read,
-            irq: IrqPin::Off
+            irq: IrqPin::Off,
         }
     }
 }
@@ -130,28 +133,31 @@ impl CPU {
 
 impl CPU {
     pub fn tick(&mut self, mut pins: Pins) -> Pins {
-        match pins.irq {
-            IrqPin::On(irq) => {
-                let jump_addr = match self.map.read((irq * 2) as u32) {
-                    DeviceMapResult::Ok(value) => value,
-                    DeviceMapResult::NoDevices => panic!("No devices attached. Could not read any values."),
-                    DeviceMapResult::Error(err) => {
-                        if err == DeviceResponse::ReadOnly {
-                            panic!("Device read only. Could not read value.");
-                        } else {
-                            panic!("Unknown error. Could not read value.");
-                        }
+        if let IrqPin::On(irq) = pins.irq {
+            let jump_addr = match self.map.read((irq * 2) as u32) {
+                DeviceMapResult::Ok(value) => value,
+                DeviceMapResult::NoDevices => {
+                    panic!("No devices attached. Could not read any values.")
+                }
+                DeviceMapResult::Error(err) => {
+                    if err == DeviceResponse::ReadOnly {
+                        panic!("Device read only. Could not read value.");
+                    } else {
+                        panic!("Unknown error. Could not read value.");
                     }
-                };
+                }
+            };
 
+            if jump_addr != 0 {
                 self.push_registers();
                 self.pc = jump_addr;
-                
+
                 pins.irq = IrqPin::Off;
                 return pins;
-            },
-            _ => ()
-        };
+            } else {
+                pins.irq = IrqPin::Off;
+            }
+        }
 
         self.flags.set(Flags::D, false);
         pins.rw = ReadWrite::Read;
@@ -253,21 +259,24 @@ impl CPU {
             },
         };
 
-        // println!("Running {:?} with addr mode {:?}.", res.opcode, res.mode);
-        // println!(
-        //     "Opcode {:08b} ir {} dr {} ad {}",
-        //     (mask & self.ir),
-        //     self.ir,
-        //     self.dr,
-        //     self.ad,
-        // );
+        if res.opcode != Opcode::HLT {
+            println!("Running {:?} with addr mode {:?}.", res.opcode, res.mode);
+            println!(
+                "Opcode {:08b} ir {} dr {} ad {}",
+                (mask & self.ir),
+                self.ir,
+                self.dr,
+                self.ad,
+            );
 
-        // println!("Executing instruction...");
+            println!("Executing instruction...");
+        }
+
         (res.exec)(self);
 
         if self.debug_mode {
             let tx = self.debug_tx.as_ref().unwrap();
-            
+
             tx.send(DebugInfo {
                 r1: self.r1,
                 r2: self.r2,
@@ -279,8 +288,9 @@ impl CPU {
                 sp: self.sp,
                 bp: self.bp,
                 flags: self.flags,
-                pins
-            }).unwrap();
+                pins,
+            })
+            .unwrap();
         }
 
         self.is = 0;
@@ -312,11 +322,13 @@ impl CPU {
 
     pub fn push_registers(&mut self) {
         for reg in 0..6 {
-            let decoded_reg = self.decode_register(reg).clone();
-            
+            let decoded_reg = *self.decode_register(reg);
+
             match self.map.write(self.sp as u32, decoded_reg) {
                 DeviceMapResult::Ok(_) => (),
-                DeviceMapResult::NoDevices => panic!("No devices attached. Could not read any values."),
+                DeviceMapResult::NoDevices => {
+                    panic!("No devices attached. Could not read any values.")
+                }
                 DeviceMapResult::Error(err) => {
                     if err == DeviceResponse::ReadOnly {
                         panic!("Device read only. Could not read value.");
@@ -325,7 +337,7 @@ impl CPU {
                     }
                 }
             };
-        
+
             self.sp += 2;
         }
 
@@ -340,7 +352,7 @@ impl CPU {
                 }
             }
         };
-    
+
         self.sp += 2;
 
         match self.map.write(self.sp as u32, self.pc + self.is as u16) {
@@ -354,7 +366,7 @@ impl CPU {
                 }
             }
         };
-    
+
         self.sp += 2;
     }
 
@@ -372,27 +384,28 @@ impl CPU {
                 }
             }
         };
-        
+
         self.sp -= 2;
-        self.flags = Flags::from_bits(
-            match self.map.read(self.sp as u32) {
-                DeviceMapResult::Ok(val) => val as u32,
-                DeviceMapResult::NoDevices => panic!("No devices attached. Could not read any values."),
-                DeviceMapResult::Error(err) => {
-                    if err == DeviceResponse::ReadOnly {
-                        panic!("Device read only. Could not read value.");
-                    } else {
-                        panic!("Unknown error. Could not read value.");
-                    }
+        self.flags = Flags::from_bits(match self.map.read(self.sp as u32) {
+            DeviceMapResult::Ok(val) => val as u32,
+            DeviceMapResult::NoDevices => panic!("No devices attached. Could not read any values."),
+            DeviceMapResult::Error(err) => {
+                if err == DeviceResponse::ReadOnly {
+                    panic!("Device read only. Could not read value.");
+                } else {
+                    panic!("Unknown error. Could not read value.");
                 }
             }
-        ).unwrap();
+        })
+        .unwrap();
 
         for reg in (0..6).rev() {
             self.sp -= 2;
             *self.decode_register(reg) = match self.map.read(self.sp as u32) {
                 DeviceMapResult::Ok(val) => val,
-                DeviceMapResult::NoDevices => panic!("No devices attached. Could not read any values."),
+                DeviceMapResult::NoDevices => {
+                    panic!("No devices attached. Could not read any values.")
+                }
                 DeviceMapResult::Error(err) => {
                     if err == DeviceResponse::WriteOnly {
                         panic!("Device write only. Could not read value.");

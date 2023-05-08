@@ -1,6 +1,6 @@
 #![allow(unused_assignments)]
 
-use std::sync::{Mutex, Arc};
+use std::sync::{Arc, Mutex};
 
 use crate::vcpu::{
     cpu::{Flags, CPU},
@@ -50,7 +50,8 @@ fn test_mov_immediate_byte() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     let mut pins = cpu.pins;
 
     pins = cpu.tick(pins);
@@ -60,12 +61,16 @@ fn test_mov_immediate_byte() {
 
 #[test]
 fn test_mov_immediate_word() {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![0x00, 0x04, 0xAB, 0xCD], 0x0000, 4)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![0x00, 0x04, 0xAB, 0xCD],
+        0x0000,
+        4,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
     let mut pins = cpu.pins;
 
     pins = cpu.tick(pins);
@@ -80,7 +85,8 @@ fn test_mov_register() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.r2 = 0xABCD;
     let mut pins = cpu.pins;
 
@@ -92,12 +98,17 @@ fn test_mov_register() {
 
 #[test]
 fn test_ld_register() {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![0x41, 0x00, 0x1, 0xAB, 0xCD], 0x0000, 5)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![0x41, 0x00, 0x1, 0xAB, 0xCD],
+        0x0000,
+        5,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.r2 = 0x0003;
     let mut pins = cpu.pins;
 
@@ -108,12 +119,17 @@ fn test_ld_register() {
 
 #[test]
 fn test_ld_address() {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![0x81, 0x00, 0x03, 0xAB, 0xCD], 0x0000, 5)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![0x81, 0x00, 0x03, 0xAB, 0xCD],
+        0x0000,
+        5,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     let mut pins = cpu.pins;
 
     pins = cpu.tick(pins);
@@ -128,7 +144,8 @@ fn test_ldb_register() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.r2 = 0x0003;
     let mut pins = cpu.pins;
 
@@ -139,12 +156,17 @@ fn test_ldb_register() {
 
 #[test]
 fn test_ldb_address() {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![0x82, 0x00, 0x03, 0xCD], 0x0000, 4)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![0x82, 0x00, 0x03, 0xCD],
+        0x0000,
+        4,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     let mut pins = cpu.pins;
 
     pins = cpu.tick(pins);
@@ -159,7 +181,8 @@ fn test_cmp_immediate_eq() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r3 = 0x5;
 
@@ -179,7 +202,8 @@ fn test_cmp_immediate_lt() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r3 = 0x4;
 
@@ -199,7 +223,8 @@ fn test_cmp_immediate_gt() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r3 = 0x6;
 
@@ -219,7 +244,8 @@ fn test_cmp_register_eq() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r3 = 0x5;
     cpu.r1 = 0x5;
@@ -240,7 +266,8 @@ fn test_cmp_register_lt() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r3 = 0x4;
     cpu.r1 = 0x5;
@@ -261,7 +288,8 @@ fn test_cmp_register_gt() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r3 = 0x6;
     cpu.r1 = 0x5;
@@ -276,12 +304,17 @@ fn test_cmp_register_gt() {
 }
 
 fn test_branch_flag_is_set(opcode: u8, flag: Flags) {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![opcode, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C], 0x0000, 7)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![opcode, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C],
+        0x0000,
+        7,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.flags.set(flag, true);
 
     let mut pins = cpu.pins;
@@ -292,12 +325,17 @@ fn test_branch_flag_is_set(opcode: u8, flag: Flags) {
 }
 
 fn test_no_branch_flag_is_not_set(opcode: u8, flag: Flags) {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![opcode, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C], 0x0000, 7)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![opcode, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C],
+        0x0000,
+        7,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.flags.set(flag, false);
 
     let mut pins = cpu.pins;
@@ -308,12 +346,17 @@ fn test_no_branch_flag_is_not_set(opcode: u8, flag: Flags) {
 }
 
 fn test_branch_flag_if_not_set(opcode: u8, flag: Flags) {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![opcode, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C], 0x0000, 7)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![opcode, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C],
+        0x0000,
+        7,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.flags.set(flag, false);
 
     let mut pins = cpu.pins;
@@ -324,12 +367,17 @@ fn test_branch_flag_if_not_set(opcode: u8, flag: Flags) {
 }
 
 fn test_no_branch_flag_is_set(opcode: u8, flag: Flags) {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![opcode, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C], 0x0000, 7)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![opcode, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C],
+        0x0000,
+        7,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.flags.set(flag, true);
 
     let mut pins = cpu.pins;
@@ -391,12 +439,17 @@ fn test_bne_is_set() {
 
 #[test]
 fn test_jmp() {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![0x8E, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C], 0x0000, 7)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![0x8E, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C],
+        0x0000,
+        7,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     let mut pins = cpu.pins;
 
@@ -407,28 +460,39 @@ fn test_jmp() {
 
 #[test]
 fn test_hlt() {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![0xFE, 0x0C, 0xFF, 0x0C], 0x0000, 4)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![0xFE, 0x0C, 0xFF, 0x0C],
+        0x0000,
+        4,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     let mut pins = cpu.pins;
 
     pins = cpu.tick(pins);
 
     assert_eq!(cpu.pc, 0x0000);
+    assert_eq!(cpu.running, false);
 }
 
 #[test]
 fn test_nop() {
-let rom = Arc::new(Mutex::new(Rom::new(vec![0xFF, 0x0C, 0xFE, 0x0C], 0x0000, 4)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![0xFF, 0x0C, 0xFE, 0x0C],
+        0x0000,
+        4,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     let mut pins = cpu.pins;
 
@@ -440,11 +504,12 @@ let rom = Arc::new(Mutex::new(Rom::new(vec![0xFF, 0x0C, 0xFE, 0x0C], 0x0000, 4))
 #[test]
 fn test_add_immediate_normal() {
     let rom = Arc::new(Mutex::new(Rom::new(vec![0x10, 0x00, 0x5], 0x0000, 3)));
-    
+
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r1 = 0x2;
 
@@ -458,12 +523,17 @@ fn test_add_immediate_normal() {
 
 #[test]
 fn test_add_immediate_overflow() {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![0x10, 0x04, 0xFF, 0xFE], 0x0000, 4)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![0x10, 0x04, 0xFF, 0xFE],
+        0x0000,
+        4,
+    )));
 
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r1 = 0x2;
 
@@ -482,7 +552,8 @@ fn test_add_register_normal() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r1 = 0x2;
     cpu.r2 = 0x5;
@@ -502,7 +573,8 @@ fn test_add_register_overflow() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r1 = 0x2;
     cpu.r2 = 0xFFFE;
@@ -522,7 +594,8 @@ fn test_sub_immediate_normal() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r1 = 0x5;
 
@@ -541,7 +614,8 @@ fn test_sub_immediate_overflow() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r1 = 0x0;
 
@@ -560,7 +634,8 @@ fn test_sub_register_normal() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r1 = 0x5;
     cpu.r2 = 0x2;
@@ -580,7 +655,8 @@ fn test_sub_register_overflow() {
     let mut map = DeviceMap::new();
     map.add(rom);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
 
     cpu.r1 = 0x00;
     cpu.r2 = 0x01;
@@ -602,8 +678,8 @@ fn test_psh_immediate() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
-    cpu.sp = 0x07;
+    let mut cpu = CPU::new(0x0000, 0x07, false);
+    cpu.map = map;
 
     let mut pins = cpu.pins;
 
@@ -629,8 +705,8 @@ fn test_psh_register() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
-    cpu.sp = 0x07;
+    let mut cpu = CPU::new(0x0000, 0x07, false);
+    cpu.map = map;
     cpu.r1 = 0x05;
 
     let mut pins = cpu.pins;
@@ -662,8 +738,8 @@ fn test_psh_address() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
-    cpu.sp = 0x07;
+    let mut cpu = CPU::new(0x0000, 0x07, false);
+    cpu.map = map;
 
     let mut pins = cpu.pins;
 
@@ -694,8 +770,8 @@ fn test_pop_register() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
-    cpu.sp = 0x09;
+    let mut cpu = CPU::new(0x0000, 0x09, false);
+    cpu.map = map;
 
     let mut pins = cpu.pins;
 
@@ -719,8 +795,8 @@ fn test_pop() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
-    cpu.sp = 0x09;
+    let mut cpu = CPU::new(0x0000, 0x09, false);
+    cpu.map = map;
 
     let mut pins = cpu.pins;
 
@@ -738,7 +814,8 @@ fn test_st_register() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.r1 = 0xD07;
     cpu.r2 = 0x07;
 
@@ -766,7 +843,8 @@ fn test_st_address() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.r1 = 0xD07;
 
     let mut pins = cpu.pins;
@@ -793,7 +871,8 @@ fn test_stl_register() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.r1 = 0xD07;
     cpu.r2 = 0x07;
 
@@ -821,7 +900,8 @@ fn test_stl_address() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.r1 = 0xD07;
 
     let mut pins = cpu.pins;
@@ -848,7 +928,8 @@ fn test_sth_register() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.r1 = 0xD07;
     cpu.r2 = 0x07;
 
@@ -876,7 +957,8 @@ fn test_sth_address() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.r1 = 0xD07;
 
     let mut pins = cpu.pins;
@@ -896,14 +978,19 @@ fn test_sth_address() {
 
 #[test]
 fn test_jsr() {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![0x8F, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C], 0x0000, 7)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![0x8F, 0x00, 0x05, 0xFF, 0x0C, 0xFF, 0x0C],
+        0x0000,
+        7,
+    )));
     let ram = Arc::new(Mutex::new(Ram::new(0x07, 0x20)));
 
     let mut map = DeviceMap::new();
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
+    let mut cpu = CPU::new(0x0000, 0xFFFF, false);
+    cpu.map = map;
     cpu.sp = 0x07;
 
     let mut pins = cpu.pins;
@@ -923,7 +1010,11 @@ fn test_jsr() {
 
 #[test]
 fn test_ret() {
-    let rom = Arc::new(Mutex::new(Rom::new(vec![0xD2, 0x00, 0xFF, 0x0C, 0xFE, 0x0C], 0x0000, 6)));
+    let rom = Arc::new(Mutex::new(Rom::new(
+        vec![0xD2, 0x00, 0xFF, 0x0C, 0xFE, 0x0C],
+        0x0000,
+        6,
+    )));
     let ram = Arc::new(Mutex::new(Ram::new(0x06, 0x20)));
     {
         let mut locked_ram = ram.lock().unwrap();
@@ -934,8 +1025,8 @@ fn test_ret() {
     map.add(rom);
     map.add(ram);
 
-    let mut cpu = CPU::new(map, 0x0000);
-    cpu.sp = 0x0008;
+    let mut cpu = CPU::new(0x0000, 0x08, false);
+    cpu.map = map;
 
     let mut pins = cpu.pins;
 

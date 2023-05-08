@@ -19,27 +19,45 @@ bitflags! {
 
 #[derive(Debug)]
 enum BDAData {
-    KeyboardShiftFlags { read_only: bool, data: KeyboardFlags, range: Range<u8> },
-    KeyboardBuffer { read_only: bool, data: u8, range: Range<u8> },
+    KeyboardShiftFlags {
+        read_only: bool,
+        data: KeyboardFlags,
+        range: Range<u8>,
+    },
+    KeyboardBuffer {
+        read_only: bool,
+        data: u8,
+        range: Range<u8>,
+    },
 }
 
 #[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 struct BDA {
-    pub memory: Vec<BDAData>
+    pub memory: Vec<BDAData>,
 }
 
 impl BDA {
     pub fn new() -> Self {
         Self {
             memory: vec![
-                BDAData::KeyboardShiftFlags { read_only: true, data: KeyboardFlags::empty(), range: 22..30 },
-                BDAData::KeyboardBuffer { read_only: true, data: 0, range: 60..68 }
-            ]
+                BDAData::KeyboardShiftFlags {
+                    read_only: true,
+                    data: KeyboardFlags::empty(),
+                    range: 22..30,
+                },
+                BDAData::KeyboardBuffer {
+                    read_only: true,
+                    data: 0,
+                    range: 60..68,
+                },
+            ],
         }
     }
 }
 
 #[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct BIOS {
     start: u32,
     end: u32,
@@ -48,7 +66,7 @@ pub struct BIOS {
 
 #[derive(Debug)]
 pub enum BIOSError {
-    NoDataSection
+    NoDataSection,
 }
 
 impl BIOS {
@@ -66,20 +84,36 @@ impl BIOS {
 
     fn read_bda_data(data: &BDAData) -> (u16, Range<u8>, bool) {
         match data {
-            BDAData::KeyboardShiftFlags { read_only, data, range } => (data.bits().clone() as u16, range.clone(), read_only.clone()),
-            BDAData::KeyboardBuffer { read_only, data, range } => (data.clone() as u16, range.clone(), read_only.clone()),
+            BDAData::KeyboardShiftFlags {
+                read_only,
+                data,
+                range,
+            } => (data.bits() as u16, range.clone(), *read_only),
+            BDAData::KeyboardBuffer {
+                read_only,
+                data,
+                range,
+            } => (*data as u16, range.clone(), *read_only),
         }
     }
 
     pub fn set_keyboard_buffer(&mut self, key: u8) -> Result<(), BIOSError> {
-        for (i, data) in (&self.bda.memory).into_iter().enumerate() {
+        for (i, data) in self.bda.memory.iter().enumerate() {
             match data {
                 #[allow(unused_variables)]
-                BDAData::KeyboardBuffer { read_only, data, range } => {
-                    self.bda.memory[i] = BDAData::KeyboardBuffer { read_only: read_only.clone(), data: key, range: range.clone() };
-                    
+                BDAData::KeyboardBuffer {
+                    read_only,
+                    data,
+                    range,
+                } => {
+                    self.bda.memory[i] = BDAData::KeyboardBuffer {
+                        read_only: *read_only,
+                        data: key,
+                        range: range.clone(),
+                    };
+
                     return Ok(());
-                },
+                }
                 _ => continue,
             }
         }
@@ -88,16 +122,24 @@ impl BIOS {
     }
 
     pub fn set_keyboard_flag(&mut self, flag: KeyboardFlags, value: bool) -> Result<(), BIOSError> {
-        for (i, data) in (&self.bda.memory).into_iter().enumerate() {
+        for (i, data) in self.bda.memory.iter().enumerate() {
             match data {
                 #[allow(unused_variables)]
-                BDAData::KeyboardShiftFlags { read_only, data, range } => {
-                    let mut mod_flags = data.clone();
+                BDAData::KeyboardShiftFlags {
+                    read_only,
+                    data,
+                    range,
+                } => {
+                    let mut mod_flags = *data;
                     mod_flags.set(flag, value);
-                    self.bda.memory[i] = BDAData::KeyboardShiftFlags { read_only: read_only.clone(), data: mod_flags, range: range.clone() };
-                    
+                    self.bda.memory[i] = BDAData::KeyboardShiftFlags {
+                        read_only: *read_only,
+                        data: mod_flags,
+                        range: range.clone(),
+                    };
+
                     return Ok(());
-                },
+                }
                 _ => continue,
             }
         }
@@ -113,7 +155,7 @@ impl Device for BIOS {
                 let (read_data, read_range, _) = BIOS::read_bda_data(data);
 
                 if read_range.contains(&self.relative(addr)) {
-                    return DeviceResponse::Ok(read_data.clone());
+                    return DeviceResponse::Ok(read_data);
                 }
             }
         }
@@ -134,7 +176,7 @@ impl Device for BIOS {
                         return DeviceResponse::Ok((read_data >> 4) as u8);
                     } else {
                         // Lower bytes
-                        return DeviceResponse::Ok(read_data.clone() as u8);
+                        return DeviceResponse::Ok(read_data as u8);
                     }
                 }
             }

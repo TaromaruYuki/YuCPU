@@ -22,16 +22,34 @@ pub enum InstructionType {
     Two,
 }
 
+#[derive(Debug, PartialEq)]
+pub enum Sections {
+    None,
+    Text,
+    Data,
+}
+
 #[derive(Debug)]
 pub struct ParserResult {
     pub metadata: HashMap<String, MetadataValue>,
     pub interrupts: HashMap<u8, String>,
-    pub labels: Vec<Label>,
+    pub text_labels: Vec<Label>,
+    pub data_labels: HashMap<String, Vec<DefineByteData>>,
 }
 
 impl ParserResult {
-    pub fn new(metadata: HashMap<String, MetadataValue>, labels: Vec<Label>, interrupts: HashMap<u8, String>) -> ParserResult {
-        ParserResult { metadata, labels, interrupts }
+    pub fn new(
+        metadata: HashMap<String, MetadataValue>,
+        text_labels: Vec<Label>,
+        data_labels: HashMap<String, Vec<DefineByteData>>,
+        interrupts: HashMap<u8, String>,
+    ) -> ParserResult {
+        ParserResult {
+            metadata,
+            text_labels,
+            data_labels,
+            interrupts,
+        }
     }
 }
 
@@ -263,13 +281,32 @@ impl Label {
     }
 }
 
+#[derive(Debug, Clone)]
+pub enum DefineByteData {
+    String(String, usize),
+    Byte(u8, usize),
+    Short(u16, usize),
+}
+
+impl DefineByteData {
+    pub fn len(&self) -> usize {
+        match self.clone() {
+            DefineByteData::String(string, _) => string.len(),
+            DefineByteData::Byte(_, _) => 1,
+            DefineByteData::Short(_, _) => 2,
+        }
+    }
+}
+
 pub struct Parser {
     tokens: Vec<TokenInfoType>,
     pub metadata: HashMap<String, MetadataValue>,
     pub interrupts: HashMap<u8, String>,
-    pub labels: Vec<Label>,
+    pub text_labels: Vec<Label>,
+    pub data_labels: HashMap<String, Vec<DefineByteData>>,
     current_token_index: u32,
     label_offset: usize,
+    current_section: Sections,
 }
 
 impl Parser {
@@ -279,9 +316,11 @@ impl Parser {
             tokens,
             metadata: HashMap::new(),
             interrupts: HashMap::new(),
-            labels: Vec::new(),
+            text_labels: Vec::new(),
+            data_labels: HashMap::new(),
             current_token_index: 0,
             label_offset: 0,
+            current_section: Sections::None,
         }
     }
 
@@ -297,7 +336,7 @@ impl Parser {
         if self.current_token_index + 1 == self.tokens.len() as u32 {
             return None;
         }
-        
+
         Some(&self.tokens[(self.current_token_index + 1) as usize])
     }
 
@@ -332,12 +371,18 @@ impl Parser {
     }
 
     fn label_exists(&mut self, name: &String) -> bool {
-        if self.labels.is_empty() {
+        if self.text_labels.is_empty() && self.data_labels.is_empty() {
             return false;
         }
 
-        for label in &self.labels {
+        for label in &self.text_labels {
             if &label.name == name {
+                return true;
+            }
+        }
+
+        for label in self.data_labels.keys() {
+            if label == name {
                 return true;
             }
         }
@@ -357,14 +402,31 @@ impl Parser {
             match token.0 {
                 Token::Metadata => self.parse_metadata(),
                 Token::InterruptDefine => self.set_interrupt(),
-                Token::Label => self.parse_label(),
+                Token::Label => match self.current_section {
+                    Sections::Text => self.parse_text_label(),
+                    Sections::Data => self.parse_data_label(),
+                    Sections::None => panic!("No section defined for label {}", token.1),
+                },
                 Token::Error => panic!("Unknown symbol \"{}\"", token.1),
                 Token::NewLine => self.current_token_index += 1,
+                Token::TextSection => {
+                    self.current_section = Sections::Text;
+                    self.current_token_index += 1
+                }
+                Token::DataSection => {
+                    self.current_section = Sections::Data;
+                    self.current_token_index += 1
+                }
                 _ => panic!("Unknown token \"{:?}\"", token.0),
             }
         }
 
-        ParserResult::new(self.metadata.clone(), self.labels.clone(), self.interrupts.clone())
+        ParserResult::new(
+            self.metadata.clone(),
+            self.text_labels.clone(),
+            self.data_labels.clone(),
+            self.interrupts.clone(),
+        )
     }
 
     fn set_interrupt(&mut self) {
@@ -398,9 +460,9 @@ impl Parser {
             _ => panic!("Expected Identifier, got {:?}", label_name_token.0),
         }
 
-        let k = Self::convert_byte_to_base(interrupt_number_token.1.clone());
+        let k = Self::convert_byte_to_base(interrupt_number_token.1);
 
-        self.interrupts.insert(k, label_name_token.1.clone());
+        self.interrupts.insert(k, label_name_token.1);
 
         self.current_token_index += 1;
     }
@@ -428,24 +490,22 @@ impl Parser {
 
         match ident_token.0 {
             Token::Identifier => {
-                self.metadata.insert(
-                    metadata_name,
-                    MetadataValue::String(ident_token.1.clone()),
-                );
-            },
+                self.metadata
+                    .insert(metadata_name, MetadataValue::String(ident_token.1));
+            }
             Token::Number => {
                 self.metadata.insert(
                     metadata_name,
-                    MetadataValue::Number(Self::convert_short_to_base(ident_token.1.clone())),
+                    MetadataValue::Number(Self::convert_short_to_base(ident_token.1)),
                 );
-            },
-            _ => panic!("Expected Number or Identifier, got {:?}", ident_token.0)
+            }
+            _ => panic!("Expected Number or Identifier, got {:?}", ident_token.0),
         }
 
         self.current_token_index += 1;
     }
 
-    fn parse_label(&mut self) {
+    fn parse_text_label(&mut self) {
         if self.get_token().is_none() {
             panic!("No tokens left, expecting label.");
         }
@@ -459,7 +519,11 @@ impl Parser {
 
         self.current_token_index += 1;
 
-        println!("Label {} addr 0x{:x}", label_name, self.label_offset + 0x4402);
+        // println!(
+        //     "Label {} addr 0x{:x}",
+        //     label_name,
+        //     self.label_offset + 0x4402
+        // );
         let mut label = Label::new(label_name, self.label_offset + 0x4402);
 
         loop {
@@ -488,7 +552,7 @@ impl Parser {
             panic!("Label {} has no body.", label.name);
         }
 
-        self.labels.push(label);
+        self.text_labels.push(label);
     }
 
     fn make_instruction(&mut self) -> ParserInstruction {
@@ -594,7 +658,7 @@ impl Parser {
                         ParserInstruction::get_instruction(opcode, args)
                     }
                     Token::Number => {
-                        let value = Self::convert_short_to_base(sec_arg.1.clone());
+                        let value = Self::convert_short_to_base(sec_arg.1);
 
                         args.push(InstructionArg::Number(value));
                         self.current_token_index += 1;
@@ -611,7 +675,7 @@ impl Parser {
                         ParserInstruction::get_instruction(opcode, args)
                     }
                     Token::Identifier => {
-                        args.push(InstructionArg::Identifier(sec_arg.1.clone()));
+                        args.push(InstructionArg::Identifier(sec_arg.1));
                         self.current_token_index += 1;
 
                         ParserInstruction::get_instruction(opcode, args)
@@ -630,7 +694,7 @@ impl Parser {
                 ParserInstruction::get_instruction(opcode, args)
             }
             Token::Number => {
-                let value = Self::convert_short_to_base(token.1.clone());
+                let value = Self::convert_short_to_base(token.1);
 
                 args.push(InstructionArg::Number(value));
 
@@ -639,7 +703,7 @@ impl Parser {
                 ParserInstruction::get_instruction(opcode, args)
             }
             Token::Identifier => {
-                args.push(InstructionArg::Identifier(token.1.clone()));
+                args.push(InstructionArg::Identifier(token.1));
                 self.current_token_index += 1;
 
                 ParserInstruction::get_instruction(opcode, args)
@@ -647,5 +711,73 @@ impl Parser {
             Token::Error => panic!("Error token found: {:?}", token.0),
             _ => panic!("Expected argument, got {:?}", token.0),
         }
+    }
+
+    fn parse_data_label(&mut self) {
+        if self.get_token().is_none() {
+            panic!("No tokens left, expecting label.");
+        }
+
+        let label_token = self.get_token().unwrap();
+        let label_name = label_token.1.replace(':', "");
+
+        if self.label_exists(&label_name) {
+            panic!("Label {} already defined.", label_name);
+        }
+
+        self.current_token_index += 1;
+
+        println!("Data label is {}", label_name);
+
+        if self.get_token().is_none() {
+            panic!("No tokens left, expecting DefineByte.")
+        }
+
+        let def_byte = self.get_token().unwrap();
+
+        if def_byte.0 != Token::DefineByte {
+            panic!("Found {:?}, expecting DefineByte", def_byte.0);
+        }
+
+        self.current_token_index += 1;
+
+        let mut data: Vec<DefineByteData> = Vec::new();
+
+        let mut offset = 0;
+
+        loop {
+            if self.get_token().is_none() {
+                break;
+            }
+
+            let token = self.get_token().unwrap();
+
+            match token.0 {
+                Token::String => {
+                    let byte_data = DefineByteData::String(token.1.replace('"', ""), offset);
+                    data.push(byte_data.clone());
+                    offset += byte_data.len();
+                }
+                Token::Number => {
+                    let num = Parser::convert_short_to_base(token.1);
+                    if num > 255 {
+                        // Num is a short
+                        data.push(DefineByteData::Short(num, offset));
+                        offset += 2;
+                    } else {
+                        // Num is a byte
+                        data.push(DefineByteData::Byte(num as u8, offset));
+                        offset += 1;
+                    }
+                }
+                Token::Comma => (),
+                Token::NewLine => break,
+                _ => panic!("Cannot turn token {:?} into bytes", token.0),
+            }
+
+            self.current_token_index += 1;
+        }
+
+        self.data_labels.insert(label_name, data);
     }
 }

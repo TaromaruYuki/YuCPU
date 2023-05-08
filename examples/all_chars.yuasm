@@ -1,6 +1,8 @@
 .main start
 
-main:
+.text
+
+start:
     mov r1, 0
     mov r2, 0xA001
     mov r3, 0xA000

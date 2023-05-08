@@ -344,28 +344,28 @@ fn compare(cpu: &mut CPU, val1: u16, val2: u16) {
     cpu.flags.set(Flags::Z, false);
     cpu.flags.set(Flags::L, false);
     cpu.flags.set(Flags::G, false);
-    
+
     if val1 == val2 {
         cpu.flags.set(Flags::Z, true);
-    } 
-    
+    }
+
     if val1 < val2 {
         cpu.flags.set(Flags::L, true);
     }
-    
+
     if val1 > val2 {
         cpu.flags.set(Flags::G, true);
     }
 
-    if val1 <= val2 {
-        cpu.flags.set(Flags::Z, true);    
-        cpu.flags.set(Flags::L, true);
-    }
-    
-    if val1 >= val2 {
-        cpu.flags.set(Flags::Z, true);    
-        cpu.flags.set(Flags::G, true);
-    }
+    // if val1 <= val2 {
+    //     cpu.flags.set(Flags::Z, true);
+    //     cpu.flags.set(Flags::L, true);
+    // }
+
+    // if val1 >= val2 {
+    //     cpu.flags.set(Flags::Z, true);
+    //     cpu.flags.set(Flags::G, true);
+    // }
 }
 
 pub fn cmp_immediate(cpu: &mut CPU) {
@@ -566,47 +566,57 @@ pub fn int_immediate(cpu: &mut CPU) {
 }
 
 pub fn and_immediate(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) & cpu.dr;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) & cpu.dr;
     cpu.advance();
 }
 pub fn and_register(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) & *cpu.decode_register(cpu.dr as u8);
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) & *cpu.decode_register(cpu.dr as u8);
     cpu.advance();
 }
 
 pub fn or_immediate(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) | cpu.dr;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) | cpu.dr;
     cpu.advance();
 }
 pub fn or_register(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) | *cpu.decode_register(cpu.dr as u8);
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) | *cpu.decode_register(cpu.dr as u8);
     cpu.advance();
 }
 
 pub fn xor_immediate(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) ^ cpu.dr;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) ^ cpu.dr;
     cpu.advance();
 }
 pub fn xor_register(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) ^ *cpu.decode_register(cpu.dr as u8);
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) ^ *cpu.decode_register(cpu.dr as u8);
     cpu.advance();
 }
 
 pub fn lsh_immediate(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) << cpu.dr;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) << cpu.dr;
     cpu.advance();
 }
 pub fn lsh_register(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) << *cpu.decode_register(cpu.dr as u8);
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) << *cpu.decode_register(cpu.dr as u8);
     cpu.advance();
 }
 
 pub fn rsh_immediate(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) >> cpu.dr;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) >> cpu.dr;
     cpu.advance();
 }
 pub fn rsh_register(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) >> *cpu.decode_register(cpu.dr as u8);
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) >> *cpu.decode_register(cpu.dr as u8);
     cpu.advance();
 }
 
@@ -648,11 +658,13 @@ pub fn mul_register(cpu: &mut CPU) {
 }
 
 pub fn mod_immediate(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) % cpu.dr;
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) % cpu.dr;
     cpu.advance();
 }
 pub fn mod_register(cpu: &mut CPU) {
-    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) = *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) % *cpu.decode_register(cpu.dr as u8);
+    *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) =
+        *cpu.decode_register(((0xF0 & cpu.ir) >> 4) as u8) % *cpu.decode_register(cpu.dr as u8);
     cpu.advance();
 }
 

@@ -11,12 +11,23 @@ pub enum Token {
     #[token("\n")]
     NewLine,
 
+    #[token("db")]
+    DefineByte,
+
+    #[token(".text")]
+    TextSection,
+
+    #[token(".data")]
+    DataSection,
+
+    #[regex("(\")([^\"]*)(\")")]
+    String,
+
     #[regex(r"\.[a-zA-Z]+")]
     Metadata,
 
     // #[regex(r"\.[a-zA-Z]+ [a-zA-Z0-9]+ [a-zA-Z0-9]+")]
     // InterruptDefine,
-
     #[regex("[a-zA-Z][a-zA-Z0-9]+:")]
     Label,
 

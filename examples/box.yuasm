@@ -2,6 +2,8 @@
 
 ; TODO: Introduce assembly functions into this example
 
+.text
+
 start:
     ; Storing the characters we will use for drawing the box
     mov r6, 201          ; Character ╔

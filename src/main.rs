@@ -118,19 +118,31 @@ fn main() {
             }
 
             let mut file = File::open(&input).unwrap();
-            let mut buf_file_size = [0_u8; 2];
-            file.read_exact(&mut buf_file_size).unwrap();
-            let file_size = u16::from_be_bytes(buf_file_size);
-            println!("Size: {}", file_size);
 
-            let mut program = vec![0; file_size as usize];
-            file.read_exact(&mut program.as_mut_slice()).unwrap();
-            println!("{:?}", program);
+            let mut buf_start_index = [0_u8; 2];
+            file.read_exact(&mut buf_start_index).unwrap();
+            let start_index: u16 = u16::from_be_bytes(buf_start_index);
+
+            let mut buf_text_size = [0_u8; 2];
+            file.read_exact(&mut buf_text_size).unwrap();
+            let text_size = u16::from_be_bytes(buf_text_size);
+
+            let mut buf_data_size = [0_u8; 2];
+            file.read_exact(&mut buf_data_size).unwrap();
+            let data_size = u16::from_be_bytes(buf_data_size);
+
+            dbg!(start_index);
+            dbg!(text_size);
+            dbg!(data_size);
+
+            let mut program = vec![0; (text_size + data_size) as usize];
+            file.read_exact(program.as_mut_slice()).unwrap();
+            dbg!(&program);
 
             let mut ivt_buf = [0; 510];
             file.read_exact(&mut ivt_buf).unwrap();
 
-            vcpu::run(program, ivt_buf, debug_mode);
+            vcpu::run(program, ivt_buf, start_index, debug_mode);
         }
         Commands::OpcodeTable => {
             let hashmap = common::instruction::opcode::Instruction::hashmap();

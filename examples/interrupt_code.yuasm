@@ -4,6 +4,8 @@
 .int 0x02 sleep
 .int 0x03 print
 
+.text
+
 start:
     mov r2, 0x0401           ; Load the address we will use to store our string
 

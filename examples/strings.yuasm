@@ -1,0 +1,36 @@
+.main start
+
+.text
+
+print:
+    mov r2, 0xA001
+
+printloop:
+    ldb r3, r1
+
+    cmp r3, 0
+
+    ; hlt
+
+    beq printend
+
+    stl r3, r2
+    add r2, 2
+    add r1, 1
+
+    jmp printloop
+
+printend:
+    ret
+
+start:
+    mov r1, str2
+
+    ; ldb r3, r1
+    jsr print
+
+    hlt
+
+.data
+
+str1: db "Hello, world! ", 0x2, 0x0

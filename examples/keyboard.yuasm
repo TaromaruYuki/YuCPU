@@ -1,6 +1,8 @@
 .main start
 .int 0x01 keyboard
 
+.text
+
 start:
     mov r5, 0 ; x
     stl r5, $0x401
