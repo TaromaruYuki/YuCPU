@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use super::{Device, DeviceResponse};
 
 pub enum DeviceMapResult<T> {
@@ -7,7 +9,7 @@ pub enum DeviceMapResult<T> {
 }
 
 pub struct DeviceMap {
-    pub devices: Vec<Box<dyn Device>>,
+    pub devices: Vec<Arc<Mutex<dyn Device>>>,
 }
 
 impl DeviceMap {
@@ -17,17 +19,18 @@ impl DeviceMap {
         }
     }
 
-    pub fn add<T: 'static + Device>(&mut self, device: T) {
-        self.devices.push(Box::new(device));
+    pub fn add<T: 'static + Device>(&mut self, device: Arc<Mutex<T>>) {
+        self.devices.push(device);
     }
 
     pub fn read(&mut self, addr: u32) -> DeviceMapResult<u16> {
         for device in &mut self.devices {
-            let res = match device.read(addr) {
+            let dev = device.lock().unwrap();
+            let res = match dev.read(addr) {
                 DeviceResponse::Ok(val) => val,
                 DeviceResponse::NotMyAddress => continue,
                 DeviceResponse::ReadOnly => {
-                    panic!("Something went wrong with device {}.\nRead only received on a read action.", device.get_name());
+                    panic!("Something went wrong with device {}.\nRead only received on a read action.", dev.get_name());
                 }
                 DeviceResponse::WriteOnly => {
                     println!("Device is write only.");
@@ -37,7 +40,7 @@ impl DeviceMap {
                 _ => {
                     panic!(
                         "Something wrong wrong with device {}.\nA unknown error received.",
-                        device.get_name()
+                        dev.get_name()
                     );
                 }
             };
@@ -50,11 +53,12 @@ impl DeviceMap {
 
     pub fn read_byte(&mut self, addr: u32) -> DeviceMapResult<u8> {
         for device in &mut self.devices {
-            let res = match device.read_byte(addr) {
+            let dev = device.lock().unwrap();
+            let res = match dev.read_byte(addr) {
                 DeviceResponse::Ok(val) => val,
                 DeviceResponse::NotMyAddress => continue,
                 DeviceResponse::ReadOnly => {
-                    panic!("Something went wrong with device {}.\nRead only received on a read action.", device.get_name());
+                    panic!("Something went wrong with device {}.\nRead only received on a read action.", dev.get_name());
                 }
                 DeviceResponse::WriteOnly => {
                     println!("Device is write only.");
@@ -64,7 +68,7 @@ impl DeviceMap {
                 _ => {
                     panic!(
                         "Something wrong wrong with device {}.\nA unknown error received.",
-                        device.get_name()
+                        dev.get_name()
                     );
                 }
             };
@@ -77,20 +81,21 @@ impl DeviceMap {
 
     pub fn write(&mut self, addr: u32, value: u16) -> DeviceMapResult<()> {
         for device in &mut self.devices {
-            match device.write(addr, value) {
+            let mut dev = device.lock().unwrap();
+            match dev.write(addr, value) {
                 DeviceResponse::Ok(_) => (),
                 DeviceResponse::NotMyAddress => continue,
                 DeviceResponse::ReadOnly => {
                     return DeviceMapResult::Error(DeviceResponse::ReadOnly)
                 }
                 DeviceResponse::WriteOnly => {
-                    panic!("Something went wrong with device {}.\nWrite only received on a write action.", device.get_name());
+                    panic!("Something went wrong with device {}.\nWrite only received on a write action.", dev.get_name());
                 }
                 #[allow(unreachable_patterns)]
                 _ => {
                     panic!(
                         "Something wrong wrong with device {}.\nA unknown error received.",
-                        device.get_name()
+                        dev.get_name()
                     );
                 }
             };
@@ -103,20 +108,21 @@ impl DeviceMap {
 
     pub fn write_byte(&mut self, addr: u32, value: u8) -> DeviceMapResult<()> {
         for device in &mut self.devices {
-            match device.write_byte(addr, value) {
+            let mut dev = device.lock().unwrap();
+            match dev.write_byte(addr, value) {
                 DeviceResponse::Ok(_) => (),
                 DeviceResponse::NotMyAddress => continue,
                 DeviceResponse::ReadOnly => {
                     return DeviceMapResult::Error(DeviceResponse::ReadOnly);
                 }
                 DeviceResponse::WriteOnly => {
-                    panic!("Something went wrong with device {}.\nWrite only received on a write action.", device.get_name());
+                    panic!("Something went wrong with device {}.\nWrite only received on a write action.", dev.get_name());
                 }
                 #[allow(unreachable_patterns)]
                 _ => {
                     panic!(
                         "Something wrong wrong with device {}.\nA unknown error received.",
-                        device.get_name()
+                        dev.get_name()
                     );
                 }
             };

@@ -1,0 +1,154 @@
+.main start
+
+; TODO: Introduce assembly functions into this example
+
+.text
+
+start:
+    ; Storing the characters we will use for drawing the box
+    mov r6, 201          ; Character ╔
+    stl r6, $0x0401
+
+    mov r6, 205          ; Character ═
+    stl r6, $0x0402
+
+    mov r6, 187          ; Character ╗
+    stl r6, $0x0403
+
+    mov r6, 186          ; Character ║
+    stl r6, $0x0404
+
+    mov r6, 200          ; Character ╚
+    stl r6, $0x0405
+
+    mov r6, 188          ; Character ╝
+    stl r6, $0x0406
+
+    mov r6, 0x1F
+    stl r6, $0x0407
+
+    mov r3, 0xA001       ; Load the address of VRAM in register 3
+    mov r4, 23           ; The amount of horizontal lines we need
+    jsr drawbox
+
+    jmp loop
+
+drawbox:
+    jsr topbarstart      ; Draw the top bar
+    jsr body             ; Draw the body
+    jsr bottombarstart
+    ret
+
+topbarstart:
+    ldb r6, $0x0401      ; Load the top-left corner
+    mov r1, r6
+    stl r1, r3           ; Store lower byte of register 1 in the address in register 3
+    sub r3, 1            ; Go back once to store the color
+    ldb r6, $0x0407      ; Load the color in regsister 6
+    stl r6, r3           ; Store lower byte of register 6 in the address in register 3
+    add r3, 3            ; Increment address by 3
+
+    mov r2, 0            ; Initialize topbarmiddle's character count
+
+topbarmiddle:
+    ldb r6, $0x0402      ; Load the horizontal bar character
+    mov r1, r6
+    stl r1, r3
+
+    sub r3, 1
+    ldb r6, $0x0407
+    stl r6, r3
+
+    add r2, 1            ; Increment counter
+    add r3, 3
+
+    cmp r2, 78           ; Check if we have hit 78 characters. 80 (Max horizontal characters) - 2 (The corner characters)
+
+    beq topbarend        ; Branch to topbarend if register 2 is equal to 78
+    jmp topbarmiddle     ; Loop back to the top
+
+topbarend:
+    ldb r6, $0x0403      ; Load the top-right corner
+    mov r1, r6
+    stl r1, r3
+
+    sub r3, 1
+    ldb r6, $0x0407
+    stl r6, r3
+
+    add r3, 3
+
+    ret                  ; Return to previous label
+
+body:
+    ldb r6, $0x0404      ; Load the verical bar character
+    mov r1, r6
+
+bodyloop:
+    stl r1, r3
+
+    sub r3, 1
+    ldb r6, $0x0407
+    stl r6, r3
+
+    add r3, 159          ; Offset to end
+
+    stl r1, r3
+
+    sub r3, 1
+    ldb r6, $0x0407
+    stl r6, r3
+
+    add r3, 3
+
+    sub r4, 1            ; One row was done, subtract 1 from the rows left
+
+    cmp r4, 0            ; Check if we have done all the rows
+
+    bne bodyloop         ; If we have not, keep looping
+
+    ret                  ; Return to previous label
+
+bottombarstart:
+    ldb r6, $0x0405      ; Load the bottom-left corner
+    mov r1, r6
+    stl r1, r3
+    sub r3, 1
+    ldb r6, $0x0407
+    stl r6, r3
+    add r3, 3
+
+    mov r2, 0            ; Initialize bottombarmiddle's character count
+
+bottombarmiddle:
+    ldb r6, $0x0402      ; Load the horizontal bar character
+    mov r1, r6
+    stl r1, r3
+
+    sub r3, 1
+    ldb r6, $0x0407
+    stl r6, r3
+
+    add r2, 1            ; Increment counter
+    add r3, 3
+
+    cmp r2, 78           ; Check if we have hit 78 characters. 80 (Max horizontal characters) - 2 (The corner characters)
+
+    beq bottombarend     ; Branch to bottombarend if register 2 is equal to 78
+    jmp bottombarmiddle  ; Loop back to the top
+
+bottombarend:
+    ldb r6, $0x0406      ; Load the bottom-right corner
+    mov r1, r6
+    stl r1, r3
+
+    sub r3, 1
+    ldb r6, $0x0407
+    stl r6, r3
+
+    add r3, 3
+
+    ret                  ; Return to previous label
+
+loop:
+    jmp loop

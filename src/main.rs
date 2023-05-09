@@ -9,7 +9,7 @@ use clap::{Parser as ClapParser, Subcommand};
 use itertools::Itertools;
 use logos::Logos;
 use std::fs::{self, File};
-use std::io::BufRead;
+use std::io::{BufRead, Read};
 use std::path::PathBuf;
 use std::process::exit;
 use std::str::FromStr;
@@ -40,10 +40,13 @@ enum Commands {
     Run {
         #[arg(short, long)]
         input: PathBuf,
+
+        #[arg(short)]
+        debug_mode: bool,
     },
 
     #[command(
-        arg_required_else_help = true,
+        arg_required_else_help = false,
         about = "Generate a markdown opcode table."
     )]
     OpcodeTable,
@@ -107,22 +110,39 @@ fn main() {
                 }
             };
         }
-        Commands::Run { input } => {
+        Commands::Run { input, debug_mode } => {
             // Check if the input file exists
 
             if !input.as_path().exists() {
                 eprintln!("Input file \"{:?}\" does not exist.", input);
             }
 
-            let file = match fs::read(&input) {
-                Ok(file) => file,
-                Err(error) => {
-                    eprintln!("Unable to open file \"{input:?}\".\n{error}");
-                    exit(1);
-                }
-            };
+            let mut file = File::open(&input).unwrap();
 
-            vcpu::run(file);
+            let mut buf_start_index = [0_u8; 2];
+            file.read_exact(&mut buf_start_index).unwrap();
+            let start_index: u16 = u16::from_be_bytes(buf_start_index);
+
+            let mut buf_text_size = [0_u8; 2];
+            file.read_exact(&mut buf_text_size).unwrap();
+            let text_size = u16::from_be_bytes(buf_text_size);
+
+            let mut buf_data_size = [0_u8; 2];
+            file.read_exact(&mut buf_data_size).unwrap();
+            let data_size = u16::from_be_bytes(buf_data_size);
+
+            dbg!(start_index);
+            dbg!(text_size);
+            dbg!(data_size);
+
+            let mut program = vec![0; (text_size + data_size) as usize];
+            file.read_exact(program.as_mut_slice()).unwrap();
+            dbg!(&program);
+
+            let mut ivt_buf = [0; 510];
+            file.read_exact(&mut ivt_buf).unwrap();
+
+            vcpu::run(program, ivt_buf, start_index, debug_mode);
         }
         Commands::OpcodeTable => {
             let hashmap = common::instruction::opcode::Instruction::hashmap();
@@ -200,7 +220,7 @@ fn main() {
             let variants = Instruction::get_variants(opcode);
 
             println!(
-                "=== Opcode {:?} ===\nBinary: {:05b}\nHex: 0x{:01x}\nModes:",
+                "=== Opcode {:?} ===\nBinary: {:06b}\nHex: 0x{:01x}\nModes:",
                 opcode, opcode as u8, opcode as u8
             );
 

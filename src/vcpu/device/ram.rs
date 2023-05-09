@@ -4,6 +4,7 @@ pub struct Ram {
     pub memory: Vec<u8>,
     start: u32,
     end: u32,
+    name: String,
 }
 
 impl Ram {
@@ -12,16 +13,18 @@ impl Ram {
             memory: vec![0; (end - start) as usize],
             start,
             end,
+            name: String::from("RAM"),
         }
     }
 
     fn relative(&self, addr: u32) -> usize {
+        // println!("{:x} is {:x}", addr, (addr - self.start));
         (addr - self.start) as usize
     }
 }
 
 impl Device for Ram {
-    fn read(&mut self, addr: u32) -> DeviceResponse<u16> {
+    fn read(&self, addr: u32) -> DeviceResponse<u16> {
         if addr >= self.start && addr <= self.end {
             let data1 = (self.memory[self.relative(addr)] as u16) << 8;
             let data2 = self.memory[self.relative(addr + 1)] as u16;
@@ -32,7 +35,7 @@ impl Device for Ram {
         DeviceResponse::NotMyAddress
     }
 
-    fn read_byte(&mut self, addr: u32) -> DeviceResponse<u8> {
+    fn read_byte(&self, addr: u32) -> DeviceResponse<u8> {
         if addr >= self.start && addr <= self.end {
             return DeviceResponse::Ok(self.memory[self.relative(addr)]);
         }
@@ -42,6 +45,10 @@ impl Device for Ram {
 
     fn write(&mut self, addr: u32, value: u16) -> DeviceResponse<()> {
         if addr >= self.start && addr <= self.end {
+            if self.name == "Stack" {
+                println!("Saving at addr {}", self.relative(addr));
+            }
+
             let val1 = (value >> 8) as u8;
             let val2 = value as u8;
             let addr1 = self.relative(addr);
@@ -68,10 +75,14 @@ impl Device for Ram {
     }
 
     fn get_name(&self) -> String {
-        String::from("RAM")
+        self.name.clone()
     }
 
-    fn get_memory(&self) -> &Vec<u8> {
-        &self.memory
+    fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    fn get_memory(&self) -> Vec<u8> {
+        self.memory.clone()
     }
 }

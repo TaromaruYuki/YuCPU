@@ -7,7 +7,11 @@ pub struct Rom {
 }
 
 impl Rom {
-    pub fn new(memory: Vec<u8>, start: u32) -> Rom {
+    pub fn new(memory: Vec<u8>, start: u32, limit: u32) -> Rom {
+        if memory.len() > limit as usize {
+            panic!("Program too large to fit in ROM");
+        }
+
         Rom {
             start,
             end: (memory.len() as u32) + start - 1,
@@ -21,7 +25,7 @@ impl Rom {
 }
 
 impl Device for Rom {
-    fn read(&mut self, addr: u32) -> DeviceResponse<u16> {
+    fn read(&self, addr: u32) -> DeviceResponse<u16> {
         if addr >= self.start && addr <= self.end {
             let data1 = (self.memory[self.relative(addr)] as u16) << 8;
             let data2 = self.memory[self.relative(addr + 1)] as u16;
@@ -31,7 +35,7 @@ impl Device for Rom {
         DeviceResponse::NotMyAddress
     }
 
-    fn read_byte(&mut self, addr: u32) -> DeviceResponse<u8> {
+    fn read_byte(&self, addr: u32) -> DeviceResponse<u8> {
         if addr >= self.start && addr <= self.end {
             return DeviceResponse::Ok(self.memory[self.relative(addr)]);
         }
@@ -59,7 +63,11 @@ impl Device for Rom {
         String::from("ROM")
     }
 
-    fn get_memory(&self) -> &Vec<u8> {
-        &self.memory
+    fn set_name(&mut self, _name: String) {
+        panic!("set_name should not be called for ROM.")
+    }
+
+    fn get_memory(&self) -> Vec<u8> {
+        self.memory.clone()
     }
 }

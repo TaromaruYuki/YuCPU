@@ -1,0 +1,20 @@
+.main start
+
+.text
+
+start:
+    mov r1, 0
+    mov r2, 0xA001
+    mov r3, 0xA000
+    mov r4, 0x1F
+
+loop:
+    stl r1, r2
+    stl r4, r3
+    add r1, 1
+    add r2, 2
+    add r3, 2
+
+    cmp r1, 256
+    blt loop
+    hlt

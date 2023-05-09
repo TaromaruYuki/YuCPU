@@ -33,6 +33,17 @@ pub enum Opcode {
     ADD = 0b010000,
     SUB = 0b010001,
     RET = 0b010010,
+    INT = 0b010011,
+    REI = 0b010100,
+    AND = 0b010101,
+    OR = 0b010110,
+    XOR = 0b010111,
+    LSH = 0b011000,
+    RSH = 0b011001,
+    MUL = 0b011010,
+    MOD = 0b011011,
+    BGE = 0b011100,
+    BLE = 0b011101,
     HLT = 0b111110,
     NOP = 0b111111,
 }
@@ -77,6 +88,10 @@ impl Instruction {
         map.insert(
             Self::create_opcode(Opcode::MOV, AddressingMode::Register),
             (Opcode::MOV, AddressingMode::Register, mov_register, 2),
+        );
+        map.insert(
+            Self::create_opcode(Opcode::MOV, AddressingMode::Direct),
+            (Opcode::MOV, AddressingMode::Direct, mov_immediate, 2),
         );
 
         map.insert(
@@ -206,6 +221,88 @@ impl Instruction {
         map.insert(
             Self::create_opcode(Opcode::RET, AddressingMode::Discard),
             (Opcode::RET, AddressingMode::Discard, ret, 0),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::INT, AddressingMode::Immediate),
+            (Opcode::INT, AddressingMode::Immediate, int_immediate, 1),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::REI, AddressingMode::Discard),
+            (Opcode::REI, AddressingMode::Discard, rei, 0),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::AND, AddressingMode::Immediate),
+            (Opcode::AND, AddressingMode::Direct, and_immediate, 2),
+        );
+        map.insert(
+            Self::create_opcode(Opcode::AND, AddressingMode::Register),
+            (Opcode::AND, AddressingMode::Register, and_register, 2),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::OR, AddressingMode::Immediate),
+            (Opcode::OR, AddressingMode::Direct, or_immediate, 2),
+        );
+        map.insert(
+            Self::create_opcode(Opcode::OR, AddressingMode::Register),
+            (Opcode::OR, AddressingMode::Register, or_register, 2),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::XOR, AddressingMode::Immediate),
+            (Opcode::XOR, AddressingMode::Direct, xor_immediate, 2),
+        );
+        map.insert(
+            Self::create_opcode(Opcode::XOR, AddressingMode::Register),
+            (Opcode::XOR, AddressingMode::Register, xor_register, 2),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::LSH, AddressingMode::Immediate),
+            (Opcode::LSH, AddressingMode::Direct, lsh_immediate, 2),
+        );
+        map.insert(
+            Self::create_opcode(Opcode::AND, AddressingMode::Register),
+            (Opcode::LSH, AddressingMode::Register, lsh_register, 2),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::RSH, AddressingMode::Immediate),
+            (Opcode::RSH, AddressingMode::Direct, rsh_immediate, 2),
+        );
+        map.insert(
+            Self::create_opcode(Opcode::RSH, AddressingMode::Register),
+            (Opcode::RSH, AddressingMode::Register, rsh_register, 2),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::MUL, AddressingMode::Immediate),
+            (Opcode::MUL, AddressingMode::Immediate, mul_immediate, 2),
+        );
+        map.insert(
+            Self::create_opcode(Opcode::MUL, AddressingMode::Register),
+            (Opcode::MUL, AddressingMode::Register, mul_register, 2),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::MOD, AddressingMode::Immediate),
+            (Opcode::MOD, AddressingMode::Direct, mod_immediate, 2),
+        );
+        map.insert(
+            Self::create_opcode(Opcode::MOD, AddressingMode::Register),
+            (Opcode::MOD, AddressingMode::Register, mod_register, 2),
+        );
+
+        map.insert(
+            Self::create_opcode(Opcode::BGE, AddressingMode::Direct),
+            (Opcode::BNE, AddressingMode::Direct, bge, 1),
+        );
+        map.insert(
+            Self::create_opcode(Opcode::BLE, AddressingMode::Direct),
+            (Opcode::BNE, AddressingMode::Direct, ble, 1),
         );
 
         map.insert(

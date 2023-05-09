@@ -1,0 +1,102 @@
+.main start
+.int 0x00 interrupt
+.int 0x01 keyboard
+.int 0x02 sleep
+.int 0x03 print
+
+.text
+
+start:
+    mov r2, 0x0401           ; Load the address we will use to store our string
+
+    mov r1, 0x48             ; Ascii "H"
+    stl r1, r2               ; RAM (Temporary, since there's no data section yet)
+    add r2, 1                ; Add 1 to address
+
+    mov r1, 0x65             ; Ascii "e"
+    stl r1, r2
+    add r2, 1
+
+    mov r1, 0x6C             ; Ascii "l"
+    stl r1, r2
+    add r2, 1
+
+    mov r1, 0x6C             ; Ascii "l"
+    stl r1, r2
+    add r2, 1
+
+    mov r1, 0x6F             ; Ascii "o"
+    stl r1, r2
+    add r2, 1
+
+    mov r1, 0x21             ; Ascii "!"
+    stl r1, r2
+    add r2, 1
+
+    mov r1, 0x21             ; Ascii "!"
+    stl r1, r2
+    add r2, 1
+
+    mov r1, 0x21             ; Ascii "!"
+    stl r1, r2
+    add r2, 1
+
+    mov r1, 0x20             ; Ascii space
+    stl r1, r2
+    add r2, 1
+
+    mov r1, 0x02             ; :)
+    stl r1, r2
+    add r2, 1
+
+    mov r1, 0x00             ; Just in case the next value isn't 0 in RAM
+    stl r1, r2
+
+    int 0x03                 ; Custom interrupt for printing to screen
+
+    int 0x02                 ; Custom interrupt to make the cpu sleep
+
+    int 0x00                 ; A test interrupt
+
+    hlt                      ; Halt the CPU
+
+print:
+    mov r2, 0x0401
+    mov r3, 0xA001
+
+printloop:
+    ldb r1, r2
+
+    cmp r1, 0
+    beq printend
+
+    stl r1, r3
+
+    add r2, 1
+    add r3, 2
+
+    jmp printloop
+
+printend:
+    rei
+
+interrupt:
+    mov r1, 1
+    stl r1, $0xA001
+    rei
+
+sleep:
+    mov r6, 0
+
+sleeploop:
+    add r6, 1
+    cmp r6, 1000
+
+    bne sleeploop
+    rei
+
+keyboard:
+    ld r1, $0x4C40
+    stl r1, $0xA001
+    rei
+
