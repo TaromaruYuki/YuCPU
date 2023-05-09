@@ -2,10 +2,7 @@ use std::{fs, sync::mpsc::Sender};
 
 use bitflags::bitflags;
 
-use crate::{
-    common::instruction::opcode::{InstructionError, Opcode},
-    vcpu::device::DeviceResponse,
-};
+use crate::{common::instruction::opcode::InstructionError, vcpu::device::DeviceResponse};
 
 use super::device::map::{DeviceMap, DeviceMapResult};
 use crate::common::instruction::opcode::Instruction;
@@ -259,18 +256,18 @@ impl CPU {
             },
         };
 
-        if res.opcode != Opcode::HLT {
-            println!("Running {:?} with addr mode {:?}.", res.opcode, res.mode);
-            println!(
-                "Opcode {:08b} ir {} dr {} ad {}",
-                (mask & self.ir),
-                self.ir,
-                self.dr,
-                self.ad,
-            );
+        // if res.opcode != Opcode::HLT {
+        //     println!("Running {:?} with addr mode {:?}.", res.opcode, res.mode);
+        //     println!(
+        //         "Opcode {:08b} ir {} dr {} ad {}",
+        //         (mask & self.ir),
+        //         self.ir,
+        //         self.dr,
+        //         self.ad,
+        //     );
 
-            println!("Executing instruction...");
-        }
+        //     println!("Executing instruction...");
+        // }
 
         (res.exec)(self);
 

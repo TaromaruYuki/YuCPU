@@ -24,7 +24,7 @@ printend:
     ret
 
 start:
-    mov r1, str2
+    mov r1, str1
 
     ; ldb r3, r1
     jsr print
