@@ -191,9 +191,9 @@ Overflows (?)</li>
 </tbody></table>
 </div><div style="break-before: page; page-break-before: always;"></div><h1 id="memory"><a class="header" href="#memory">Memory</a></h1>
 <p>The CPU uses 64kb of memory. The memory map is in the format shown.</p>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: center">Interrupt Vector Table</th><th style="text-align: center">RAM</th><th style="text-align: center">ROM</th><th style="text-align: center">Stack</th></tr></thead><tbody>
-<tr><td style="text-align: center">1kb</td><td style="text-align: center">16kb</td><td style="text-align: center">1kb</td><td style="text-align: center">1kb</td></tr>
-<tr><td style="text-align: center">0x0000 - 0x0400</td><td style="text-align: center">0x0401 - 0x4401</td><td style="text-align: center">0x4402 - 0x4802</td><td style="text-align: center">0x4803 - 0x4C03</td></tr>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: center">Interrupt Vector Table</th><th style="text-align: center">RAM</th><th style="text-align: center">ROM</th><th style="text-align: center">Stack</th><th style="text-align: center">BDA</th><th style="text-align: center">VGA</th></tr></thead><tbody>
+<tr><td style="text-align: center">1kb</td><td style="text-align: center">16kb</td><td style="text-align: center">1kb</td><td style="text-align: center">1kb</td><td style="text-align: center">255 bytes</td><td style="text-align: center">4kb</td></tr>
+<tr><td style="text-align: center">0x0000 - 0x0400</td><td style="text-align: center">0x0401 - 0x4401</td><td style="text-align: center">0x4402 - 0x4802</td><td style="text-align: center">0x4803 - 0x4C03</td><td style="text-align: center">0x4C04 - 4D03</td><td style="text-align: center">0xA000 - 0xAFA0</td></tr>
 </tbody></table>
 </div>
 <p>This layout can possibly change in the future due to new features and learning more about design.</p>
@@ -202,7 +202,7 @@ Overflows (?)</li>
 </tbody></table>
 </div>
 <ul>
-<li>D: Is the data a D-Word? (Deprecated after release 0.1.1)</li>
+<li>D: Is the data a D-Word? (Deprecated after release 0.2.0)</li>
 <li>L: Less than (CMP)</li>
 <li>G: Greater than (CMP)</li>
 <li>O: Overflow (Arithmetic operations)</li>
@@ -213,19 +213,19 @@ Overflows (?)</li>
 <p>V = Value | R = Register | A = Address | L = Label (Address)</p>
 <div class="table-wrapper"><table><thead><tr><th></th><th>0x0</th><th>0x1</th><th>0x2</th><th>0x3</th><th>0x4</th><th>0x5</th><th>0x6</th><th>0x7</th><th>0x8</th><th>0x9</th><th>0xA</th><th>0xB</th><th>0xC</th><th>0xD</th><th>0xE</th><th>0xF</th></tr></thead><tbody>
 <tr><td>0x0</td><td>0x00<br/>MOV V</td><td></td><td></td><td>0x03<br/>PSH V</td><td></td><td></td><td></td><td></td><td>0x08<br/>CMP V</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x1</td><td>0x10<br/>ADD V</td><td>0x11<br/>SUB V</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x1</td><td>0x10<br/>ADD V</td><td>0x11<br/>SUB V</td><td></td><td>0x13<br/>INT V</td><td></td><td>0x15<br/>AND A/L</td><td>0x16<br/>OR A/L</td><td>0x17<br/>XOR A/L</td><td>0x18<br/>LSH A/L</td><td>0x19<br/>RSH A/L</td><td>0x1A<br/>MUL V</td><td>0x1B<br/>MOD A/L</td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x4</td><td>0x40<br/>MOV R</td><td>0x41<br/>LD R</td><td>0x42<br/>LDB R</td><td>0x43<br/>PSH R</td><td>0x44<br/>POP R</td><td>0x45<br/>ST R</td><td>0x46<br/>STL R</td><td>0x47<br/>STH R</td><td>0x48<br/>CMP R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x5</td><td>0x50<br/>ADD R</td><td>0x51<br/>SUB R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x5</td><td>0x50<br/>ADD R</td><td>0x51<br/>SUB R</td><td></td><td></td><td></td><td>0x55<br/>LSH R</td><td>0x56<br/>OR R</td><td>0x57<br/>XOR R</td><td></td><td>0x59<br/>RSH R</td><td>0x5A<br/>MUL R</td><td>0x5B<br/>MOD R</td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x6</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x7</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x8</td><td></td><td>0x81<br/>LD A/L</td><td>0x82<br/>LDB A/L</td><td>0x83<br/>PSH A/L</td><td></td><td>0x85<br/>ST A/L</td><td>0x86<br/>STL A/L</td><td>0x87<br/>STH A/L</td><td></td><td>0x89<br/>BEQ A/L</td><td>0x8A<br/>BGT A/L</td><td>0x8B<br/>BLT A/L</td><td>0x8C<br/>BOF A/L</td><td>0x8D<br/>BNE A/L</td><td>0x8E<br/>JMP A/L</td><td>0x8F<br/>JSR A/L</td></tr>
-<tr><td>0x9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x8</td><td>0x80<br/>MOV A/L</td><td>0x81<br/>LD A/L</td><td>0x82<br/>LDB A/L</td><td>0x83<br/>PSH A/L</td><td></td><td>0x85<br/>ST A/L</td><td>0x86<br/>STL A/L</td><td>0x87<br/>STH A/L</td><td></td><td>0x89<br/>BEQ A/L</td><td>0x8A<br/>BGT A/L</td><td>0x8B<br/>BLT A/L</td><td>0x8C<br/>BOF A/L</td><td>0x8D<br/>BNE A/L</td><td>0x8E<br/>JMP A/L</td><td>0x8F<br/>JSR A/L</td></tr>
+<tr><td>0x9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0x9C<br/>BNE A/L</td><td>0x9D<br/>BNE A/L</td><td></td><td></td></tr>
 <tr><td>0xA</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xC</td><td></td><td></td><td></td><td></td><td>0xC4<br/>POP</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0xD</td><td></td><td></td><td>0xD2<br/>RET</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0xD</td><td></td><td></td><td>0xD2<br/>RET</td><td></td><td>0xD4<br/>REI</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xE</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xF</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0xFE<br/>HLT</td><td>0xFF<br/>NOP</td></tr>
 </tbody></table>

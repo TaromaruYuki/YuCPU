@@ -149,19 +149,19 @@
 <p>V = Value | R = Register | A = Address | L = Label (Address)</p>
 <div class="table-wrapper"><table><thead><tr><th></th><th>0x0</th><th>0x1</th><th>0x2</th><th>0x3</th><th>0x4</th><th>0x5</th><th>0x6</th><th>0x7</th><th>0x8</th><th>0x9</th><th>0xA</th><th>0xB</th><th>0xC</th><th>0xD</th><th>0xE</th><th>0xF</th></tr></thead><tbody>
 <tr><td>0x0</td><td>0x00<br/>MOV V</td><td></td><td></td><td>0x03<br/>PSH V</td><td></td><td></td><td></td><td></td><td>0x08<br/>CMP V</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x1</td><td>0x10<br/>ADD V</td><td>0x11<br/>SUB V</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x1</td><td>0x10<br/>ADD V</td><td>0x11<br/>SUB V</td><td></td><td>0x13<br/>INT V</td><td></td><td>0x15<br/>AND A/L</td><td>0x16<br/>OR A/L</td><td>0x17<br/>XOR A/L</td><td>0x18<br/>LSH A/L</td><td>0x19<br/>RSH A/L</td><td>0x1A<br/>MUL V</td><td>0x1B<br/>MOD A/L</td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x4</td><td>0x40<br/>MOV R</td><td>0x41<br/>LD R</td><td>0x42<br/>LDB R</td><td>0x43<br/>PSH R</td><td>0x44<br/>POP R</td><td>0x45<br/>ST R</td><td>0x46<br/>STL R</td><td>0x47<br/>STH R</td><td>0x48<br/>CMP R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x5</td><td>0x50<br/>ADD R</td><td>0x51<br/>SUB R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x5</td><td>0x50<br/>ADD R</td><td>0x51<br/>SUB R</td><td></td><td></td><td></td><td>0x55<br/>LSH R</td><td>0x56<br/>OR R</td><td>0x57<br/>XOR R</td><td></td><td>0x59<br/>RSH R</td><td>0x5A<br/>MUL R</td><td>0x5B<br/>MOD R</td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x6</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0x7</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0x8</td><td></td><td>0x81<br/>LD A/L</td><td>0x82<br/>LDB A/L</td><td>0x83<br/>PSH A/L</td><td></td><td>0x85<br/>ST A/L</td><td>0x86<br/>STL A/L</td><td>0x87<br/>STH A/L</td><td></td><td>0x89<br/>BEQ A/L</td><td>0x8A<br/>BGT A/L</td><td>0x8B<br/>BLT A/L</td><td>0x8C<br/>BOF A/L</td><td>0x8D<br/>BNE A/L</td><td>0x8E<br/>JMP A/L</td><td>0x8F<br/>JSR A/L</td></tr>
-<tr><td>0x9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0x8</td><td>0x80<br/>MOV A/L</td><td>0x81<br/>LD A/L</td><td>0x82<br/>LDB A/L</td><td>0x83<br/>PSH A/L</td><td></td><td>0x85<br/>ST A/L</td><td>0x86<br/>STL A/L</td><td>0x87<br/>STH A/L</td><td></td><td>0x89<br/>BEQ A/L</td><td>0x8A<br/>BGT A/L</td><td>0x8B<br/>BLT A/L</td><td>0x8C<br/>BOF A/L</td><td>0x8D<br/>BNE A/L</td><td>0x8E<br/>JMP A/L</td><td>0x8F<br/>JSR A/L</td></tr>
+<tr><td>0x9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0x9C<br/>BNE A/L</td><td>0x9D<br/>BNE A/L</td><td></td><td></td></tr>
 <tr><td>0xA</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xB</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xC</td><td></td><td></td><td></td><td></td><td>0xC4<br/>POP</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>0xD</td><td></td><td></td><td>0xD2<br/>RET</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>0xD</td><td></td><td></td><td>0xD2<br/>RET</td><td></td><td>0xD4<br/>REI</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xE</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>0xF</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0xFE<br/>HLT</td><td>0xFF<br/>NOP</td></tr>
 </tbody></table>
