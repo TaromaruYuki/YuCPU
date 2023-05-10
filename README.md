@@ -12,4 +12,4 @@ Todo:
 - [X] Assembler
 - [X] Disassembler
 - [X] Emulated CPU
-- [ ] Graphics (Emulated PC running YuCPU)
+- [X] Graphics (Emulated PC running YuCPU)
